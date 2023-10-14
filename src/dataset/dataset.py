@@ -113,16 +113,31 @@ class CustomDataset(DatasetBase):
             self.data_cols: data columns(features/targets)
             self.data: np.ndarray, shape=(n_samples, timesteps, channels), where the last channel is the target
         '''
-        raise NotImplementedError
+        data = pd.read_csv(self.data_path)
+
+        feature_cols = [e for e in data.columns if e not in ('date', self.target)]
+        data_cols = feature_cols + [self.target]
+
+        self.data_stamp = pd.to_datetime(data.date)
+        self.data_cols = data_cols
+        self.data = data[data_cols].to_numpy()[np.newaxis, ...]
 
     def split_data(self):
-        raise NotImplementedError
+        self.split = True
+        self.num_train = int(self.ratio_train * self.data.shape[1])
+        self.num_val = int(self.ratio_val * self.data.shape[1])
+        self.train_data = self.data[:, :self.num_train, :]
+        if self.num_val == 0:
+            self.val_data = None
+        else:
+            self.val_data = self.data[:, self.num_train: self.num_train + self.num_val, :]
+        self.test_data = self.data[:, self.num_train + self.num_val:, :]
 
 
 def get_dataset(args):
     dataset_dict = {
-        'M4': M4Dataset,
-        'ETT': ETTDataset,
+        'M4':     M4Dataset,
+        'ETT':    ETTDataset,
         'Custom': CustomDataset,
     }
     return dataset_dict[args.dataset](args)
