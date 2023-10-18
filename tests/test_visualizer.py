@@ -4,17 +4,7 @@ import numpy as np
 
 from src.dataset.dataset import get_dataset
 from src.dataset.data_visualizer import data_visualize, pearson_correlation
-
-
-class Args:
-    """
-    a = Args(data_path='./test')
-    a.data_path => ./test
-    """
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            self.__dict__.update({k: v})
+from tests.test_dataset import Args
 
 
 class TestPearsonCorrelation(unittest.TestCase):

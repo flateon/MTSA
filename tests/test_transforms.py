@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 from src.utils.transforms import *
+from tests.test_dataset import Args
 
 
 class TestTransforms(unittest.TestCase):
@@ -66,7 +67,7 @@ class TestTransforms(unittest.TestCase):
     def test_box_cox_transform(self):
         for data in self.data:
             for lamda in self.lamda:
-                box_cox_transform = BoxCoxTransform(lamda)
+                box_cox_transform = BoxCoxTransform(Args(lamda=lamda))
 
                 transformed_data = box_cox_transform.transform(data)
                 inverse_transformed_data = box_cox_transform.inverse_transform(transformed_data)
