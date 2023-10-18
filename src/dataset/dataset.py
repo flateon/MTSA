@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -94,6 +96,7 @@ class CustomDataset(DatasetBase):
         self.data_path = args.data_path
         self.target = args.target
         self.type = 'Custom'
+        self.name = ''
         super().__init__(args)
 
     def read_data(self):
@@ -113,6 +116,7 @@ class CustomDataset(DatasetBase):
             self.data_cols: data columns(features/targets)
             self.data: np.ndarray, shape=(n_samples, timesteps, channels), where the last channel is the target
         '''
+        self.name = Path(self.data_path).stem
         data = pd.read_csv(self.data_path)
 
         feature_cols = [e for e in data.columns if e not in ('date', self.target)]
