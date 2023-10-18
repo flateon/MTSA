@@ -29,7 +29,3 @@ class TestMetrics(unittest.TestCase):
         target = np.array([1, 3, 5, 7])
         m = 2  # You need to specify the seasonality parameter 'm'
         self.assertAlmostEqual(mase(predict, target, m), 0.25)
-
-
-if __name__ == '__main__':
-    unittest.main()

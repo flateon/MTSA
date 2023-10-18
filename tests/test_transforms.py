@@ -72,7 +72,3 @@ class TestTransforms(unittest.TestCase):
                 inverse_transformed_data = box_cox_transform.inverse_transform(transformed_data)
 
                 self.assertTrue(np.allclose(data, inverse_transformed_data))
-
-
-if __name__ == '__main__':
-    unittest.main()

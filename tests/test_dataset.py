@@ -71,7 +71,3 @@ class TestCustomDataset(unittest.TestCase):
                     num_val = dataset.val_data.shape[1]
                     self.assertAlmostEqual(num_val, num_all * self.args.ratio_val, delta=2)
                     self.assertEqual(num_all, num_train + num_val + num_test)
-
-
-if __name__ == '__main__':
-    unittest.main()
