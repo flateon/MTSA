@@ -6,14 +6,14 @@ class Transform:
     Preprocess time series
     """
 
-    def transform(self, data):
+    def transform(self, data, *args, **kwargs):
         """
         :param data: raw timeseries
         :return: transformed timeseries
         """
         raise NotImplementedError
 
-    def inverse_transform(self, data):
+    def inverse_transform(self, data, *args, **kwargs):
         """
         :param data: raw timeseries
         :return: inverse_transformed timeseries
@@ -25,10 +25,10 @@ class IdentityTransform(Transform):
     def __init__(self, *args, **kwargs):
         pass
 
-    def transform(self, data):
+    def transform(self, data, *args, **kwargs):
         return data
 
-    def inverse_transform(self, data):
+    def inverse_transform(self, data, *args, **kwargs):
         return data
 
 
@@ -40,14 +40,29 @@ class LinearTransform(Transform):
     def set_weight_bias(self, data):
         raise NotImplementedError
 
-    def transform(self, data):
+    def transform(self, data, target_only=False):
+        """
+        Param:
+        data: ndarray shape=(n_samples, timestamp, channel) or (n_samples, timestamp) if target_only=True
+        target_only: data is target only, no other features
+        """
         if self.weight is None or self.bias is None:
             self.set_weight_bias(data)
-        return data * self.weight + self.bias
+        if target_only:
+            return data * self.weight[..., -1] + self.bias[..., -1]
+        else:
+            return data * self.weight + self.bias
 
-    def inverse_transform(self, data):
+    def inverse_transform(self, data, target_only=False):
+        """
+        Param:
+        data: ndarray shape=(n_samples, timestamp, channel)
+        target_only: data is target only, no other features
+        """
         if self.weight is None or self.bias is None:
             raise ValueError('Weight or bias is None')
+        if target_only:
+            return (data - self.bias[..., -1]) / self.weight[..., -1]
         else:
             return (data - self.bias) / self.weight
 
@@ -57,6 +72,9 @@ class NormalizationTransform(LinearTransform):
         super().__init__()
 
     def set_weight_bias(self, data):
+        """
+        :Param data: ndarray shape=(n_samples, timestamp, channel) or (n_samples, timestamp)
+        """
         y_max = np.max(data, axis=1, keepdims=True)
         y_min = np.min(data, axis=1, keepdims=True)
         self.weight = 1 / (y_max - y_min + 1e-8)
@@ -90,7 +108,7 @@ class YeoJohnsonTransform(Transform):
     def __init__(self, arg, *args, **kwargs):
         self.lamda = arg.lamda
 
-    def transform(self, data):
+    def transform(self, data, *args, **kwargs):
         result = np.zeros_like(data)
         lamda = self.lamda
         pos_mask = data >= 0
@@ -107,7 +125,7 @@ class YeoJohnsonTransform(Transform):
             result[neg_mask] = -(np.power(-data[neg_mask] + 1, 2 - lamda) - 1) / (2 - lamda)
         return result
 
-    def inverse_transform(self, data):
+    def inverse_transform(self, data, *args, **kwargs):
         result = np.zeros_like(data)
         lamda = self.lamda
         pos_mask = data >= 0
