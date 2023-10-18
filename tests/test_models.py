@@ -48,7 +48,3 @@ class TestModels(unittest.TestCase):
 
         self.assertEqual(forecast.shape, self.fore_shape)
         # TODO add value assert
-
-
-if __name__ == '__main__':
-    unittest.main()
