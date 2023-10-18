@@ -23,7 +23,7 @@ class MeanForecast(MLForecastModel):
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
-        mean = np.mean(X, axis=-1).reshape(X.shape[0], 1)
+        mean = np.mean(X, axis=-1, keepdims=True)
         return np.repeat(mean, pred_len, axis=1)
 
 
@@ -54,7 +54,7 @@ class LinearRegression(MLForecastModel):
 
         # shape=(n, window_len)
         train_data = np.concatenate([sliding_window_view(x, window_len) for x in self.X])
-        x, y = np.split(train_data, [96], axis=1)
+        x, y = np.split(train_data, [train_len], axis=1)
 
         x = np.c_[np.ones(len(x)), x]
 
