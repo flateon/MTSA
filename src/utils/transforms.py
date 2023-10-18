@@ -22,7 +22,7 @@ class Transform:
 
 
 class IdentityTransform(Transform):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
 
     def transform(self, data):
@@ -53,7 +53,7 @@ class LinearTransform(Transform):
 
 
 class NormalizationTransform(LinearTransform):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
     def set_weight_bias(self, data):
@@ -64,7 +64,7 @@ class NormalizationTransform(LinearTransform):
 
 
 class StandardizationTransform(LinearTransform):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
     def set_weight_bias(self, data):
@@ -75,7 +75,7 @@ class StandardizationTransform(LinearTransform):
 
 
 class MeanNormalizationTransform(LinearTransform):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
     def set_weight_bias(self, data):
@@ -87,8 +87,8 @@ class MeanNormalizationTransform(LinearTransform):
 
 
 class YeoJohnsonTransform(Transform):
-    def __init__(self, lamda):
-        self.lamda = lamda
+    def __init__(self, arg, *args, **kwargs):
+        self.lamda = arg.lamda
 
     def transform(self, data):
         result = np.zeros_like(data)
