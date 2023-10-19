@@ -2,7 +2,6 @@ import argparse
 import random
 
 import numpy as np
-from sklearn.preprocessing import PowerTransformer
 
 from main import get_model, get_transform, get_args
 from src.dataset.dataset import get_dataset
