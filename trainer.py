@@ -31,15 +31,12 @@ class MLTrainer:
             test_Y = dataset.test_data
             pred_len = dataset.test_data.shape[-1]
         else:
+            # only use target channel
             test_data = dataset.test_data[:, :, -1]
             subseries = np.concatenate(([sliding_window_view(v, seq_len + pred_len) for v in test_data]))
             test_X = subseries[:, :seq_len]
             test_Y = subseries[:, seq_len:]
-        te_X = self.transform.transform(test_X)
+        te_X = self.transform.transform(test_X, target_only=True)
         fore = self.model.forecast(te_X, pred_len=pred_len)
-        fore = self.transform.inverse_transform(fore)
-        print('mse:', mse(fore, test_Y))
-        # print('mae:', mae(fore, test_Y))
-        # print('mape:', mape(fore, test_Y))
-        # print('smape:', smape(fore, test_Y))
-        # print('mase:', mase(fore, test_Y))
+        fore = self.transform.inverse_transform(fore, target_only=True)
+        return mse(fore, test_Y), mae(fore, test_Y), mape(fore, test_Y), smape(fore, test_Y), mase(fore, test_Y)
