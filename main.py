@@ -1,6 +1,7 @@
 from src.models.TsfKNN import TsfKNN
-from src.models.baselines import ZeroForecast, MeanForecast
-from src.utils.transforms import IdentityTransform
+from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
+from src.utils.transforms import IdentityTransform, NormalizationTransform, StandardizationTransform, \
+    MeanNormalizationTransform, YeoJohnsonTransform
 from trainer import MLTrainer
 from src.dataset.dataset import get_dataset
 import argparse
@@ -26,11 +27,13 @@ def get_args():
     parser.add_argument('--pred_len', type=int, default=32, help='prediction sequence length')
 
     # model define
-    parser.add_argument('--model', type=str, required=True, default='MeanForecast', help='model name')
+    parser.add_argument('--model', type=str, default='MeanForecast', help='model name')
+    parser.add_argument('--lamda', type=float, default=1, help='lamda for Yeo Johnson Transform')
     parser.add_argument('--n_neighbors', type=int, default=1, help='number of neighbors used in TsfKNN')
     parser.add_argument('--distance', type=str, default='euclidean', help='distance used in TsfKNN')
     parser.add_argument('--msas', type=str, default='MIMO', help='multi-step ahead strategy used in TsfKNN, options: '
                                                                  '[MIMO, recursive]')
+    parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
 
     # transform define
     parser.add_argument('--transform', type=str, default='IdentityTransform')
@@ -41,16 +44,22 @@ def get_args():
 
 def get_model(args):
     model_dict = {
-        'ZeroForecast': ZeroForecast,
-        'MeanForecast': MeanForecast,
-        'TsfKNN': TsfKNN,
+        'ZeroForecast':         ZeroForecast,
+        'MeanForecast':         MeanForecast,
+        'LinearRegression':     LinearRegression,
+        'ExponentialSmoothing': ExponentialSmoothing,
+        'TsfKNN':               TsfKNN,
     }
     return model_dict[args.model](args)
 
 
 def get_transform(args):
     transform_dict = {
-        'IdentityTransform': IdentityTransform,
+        'IdentityTransform':          IdentityTransform,
+        'NormalizationTransform':     NormalizationTransform,
+        'StandardizationTransform':   StandardizationTransform,
+        'MeanNormalizationTransform': MeanNormalizationTransform,
+        'YeoJohnsonTransform':        YeoJohnsonTransform,
     }
     return transform_dict[args.transform](args)
 
@@ -72,4 +81,9 @@ if __name__ == '__main__':
     # train model
     trainer.train()
     # evaluate model
-    trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+    mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+    print(f"MSE: {mse:.4f}")
+    print(f"MAE: {mae:.4f}")
+    print(f"MAPE: {mape:.4f}%")
+    print(f"SMAPE: {smape:.4f}%")
+    print(f"MASE: {mase:.4f}")
