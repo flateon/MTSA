@@ -1,6 +1,8 @@
 import numpy as np
 
-np.seterr(divide='ignore')
+
+def safe_divide(a, b):
+    return np.divide(a, b, out=np.zeros_like(a, dtype=np.float64), where=b != 0)
 
 
 def mse(predict, target):
@@ -12,14 +14,12 @@ def mae(predict, target):
 
 
 def mape(predict, target):
-    ape = np.abs((target - predict) / target)
     # fix divide by zero
-    return 100 * np.mean(np.nan_to_num(ape, copy=False, nan=0.0, posinf=0.0, neginf=0.0))
+    return 100 * np.mean(np.abs(safe_divide((target - predict), target)))
 
 
 def smape(predict, target):
-    sape = np.abs(target - predict) / (np.abs(target) + np.abs(predict))
-    return 200 * np.mean(np.nan_to_num(sape, copy=False, nan=0.0, posinf=0.0, neginf=0.0))
+    return 200 * np.mean(safe_divide(np.abs(target - predict), (np.abs(target) + np.abs(predict))))
 
 
 def mase(predict, target, m: int = 24):
