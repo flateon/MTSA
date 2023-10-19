@@ -70,6 +70,7 @@ class ETTDataset(DatasetBase):
             self.data_cols: data columns(features/targets)
             self.data: np.ndarray, shape=(n_samples, timesteps, channels)
         '''
+        self.name = Path(self.data_path).stem
         data = pd.read_csv(self.data_path)
         cols = list(data.columns)
         cols.remove(self.target)
