@@ -21,7 +21,8 @@ class TestCustomDataset(unittest.TestCase):
         self.dataset_conf = [('./dataset/electricity/electricity.csv', 'OT'),
                              ('./dataset/exchange_rate/exchange_rate.csv', 'OT'),
                              ('./dataset/illness/national_illness.csv', 'OT'),
-                             ('./dataset/traffic/traffic.csv', 'OT'), ]
+                             ('./dataset/traffic/traffic.csv', 'OT'),
+                             ('./dataset/weather/weather.csv', 'OT'), ]
         self.ratio_conf = [(0.7, 0.1, 0.2),
                            (0.7, 0, 0.3),
                            (0.999999, 0, 0.000001)]
