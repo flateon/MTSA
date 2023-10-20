@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from src.utils.transforms import *
-from tests.test_dataset import Args
+from argparse import Namespace as Args
 
 
 class TestTransforms(unittest.TestCase):

@@ -1,10 +1,9 @@
 import numpy as np
 import unittest
 
-# Import the forecast models you want to test
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.models.base import MLForecastModel
-from tests.test_dataset import Args
+from argparse import Namespace as Args
 
 
 class TestModels(unittest.TestCase):

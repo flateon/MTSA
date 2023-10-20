@@ -3,17 +3,7 @@ import unittest
 import numpy as np
 
 from src.dataset.dataset import get_dataset, DatasetBase
-
-
-class Args:
-    """
-    a = Args(data_path='./test')
-    a.data_path => ./test
-    """
-
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            self.__dict__.update({k: v})
+from argparse import Namespace as Args
 
 
 class TestCustomDataset(unittest.TestCase):

@@ -4,7 +4,7 @@ import numpy as np
 
 from src.dataset.dataset import get_dataset
 from src.dataset.data_visualizer import data_visualize, pearson_correlation
-from tests.test_dataset import Args
+from argparse import Namespace as Args
 
 
 class TestPearsonCorrelation(unittest.TestCase):
