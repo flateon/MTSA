@@ -35,42 +35,55 @@ def data_visualize(dataset, t):
         dataset: dataset to visualize
         t: the number of timestamps to visualize
     """
+    # multichannel dataset
+    if len(dataset.train_data.shape) == 3:
+        # data: [timestamp, channels]
+        data = dataset.train_data[0, ...]
+        col_name = dataset.data_cols
+        data_len = data.shape[-2]
+        t_start = np.random.randint(0, data_len - t)
+        data = data[t_start:t_start + t, :]
+        t = np.arange(t_start, t_start + t)
 
-    # data: [timestamp, channels]
-    data = dataset.train_data[0, ...]
-    col_name = dataset.data_cols
-    data_len = data.shape[-2]
-    t_start = np.random.randint(0, data_len - t)
-    data = data[t_start:t_start + t, :]
+        X, Y = np.split(data, [-1], axis=-1)
+        correlation = pearson_correlation(X, Y)
+        # sort by correlation
+        idx = np.argsort(correlation)[::-1]
 
-    X, Y = np.split(data, [-1], axis=-1)
-    correlation = pearson_correlation(X, Y)
-    # sort by correlation
-    idx = np.argsort(correlation)
+        top_k_idx = idx[:3].tolist()
+        bottom_k_idx = idx[-3:].tolist()
+        # close_to_zero_idx = np.argsort(np.abs(correlation))[:2].tolist()
 
-    bottom_k_idx = idx[:3]
-    top_k_idx = idx[::-1][:3]
+        fig, axes = plt.subplots(6, 1, dpi=300, figsize=(12, 16), constrained_layout=True)
+        fig.suptitle(dataset.name, fontsize=18)
 
-    fig, axes = plt.subplots(3, 2, dpi=300, figsize=(12, 16), constrained_layout=True)
-    fig.suptitle(dataset.name, fontsize=18)
+        for i, ax in zip(top_k_idx + bottom_k_idx, axes):
+            ax.plot(t, X[..., i], label=col_name[i])
+            ax.set_title(f'Feature {col_name[i]}\nCorrelation {correlation[i]:.3f}')
+            ax.legend(loc='upper left')
 
-    for i, ax in zip(top_k_idx, axes[:, 0]):
-        ax.plot(X[..., i], label=col_name[i])
-        ax.set_title(f'Feature {col_name[i]}\nCorrelation {correlation[i]:.3f}')
-        ax.legend(loc='upper left')
+            ax1 = ax.twinx()
+            ax1.plot(t, Y, label='target', c='r')
+            ax1.legend(loc='upper right')
 
-        ax1 = ax.twinx()
-        ax1.plot(Y, label='target', c='r')
-        ax1.legend(loc='upper right')
+    # single channel dataset
+    else:
+        # (n_samples, timesteps)
+        data = dataset.test_data
+        n_samples, data_len = data.shape
 
-    for i, ax in zip(bottom_k_idx, axes[:, 1]):
-        ax.plot(X[..., i], label=col_name[i])
-        ax.set_title(f'Feature {col_name[i]}\nCorrelation {correlation[i]:.3f}')
-        ax.legend(loc='upper left')
+        t_start = np.random.randint(0, data_len - t)
+        idx_samples = np.random.choice(n_samples, 6)
 
-        ax1 = ax.twinx()
-        ax1.plot(Y, label='target', c='r')
-        ax1.legend(loc='upper right')
+        data = data[idx_samples, t_start:t_start + t]
+        t = np.arange(t_start, t_start + t)
+
+        fig, axes = plt.subplots(6, 1, dpi=300, figsize=(12, 16), constrained_layout=True)
+        fig.suptitle(dataset.name, fontsize=18)
+
+        for d, ax, idx in zip(data, axes, idx_samples):
+            ax.plot(t, d, label=f'sample: {idx}')
+            ax.legend(loc='upper left')
 
     save_path = f'./imgs/{dataset.name}.png'
     plt.savefig(save_path)

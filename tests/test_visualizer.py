@@ -31,19 +31,25 @@ class TestPearsonCorrelation(unittest.TestCase):
 
 
 class TestVisualizer(unittest.TestCase):
-    def setUp(self):
-        self.dataset_conf = [('./dataset/electricity/electricity.csv', 'OT'),
-                             ('./dataset/exchange_rate/exchange_rate.csv', 'OT'),
-                             ('./dataset/illness/national_illness.csv', 'OT'),
-                             ('./dataset/traffic/traffic.csv', 'OT'),
-                             ('./dataset/weather/weather.csv', 'OT'), ]
-        self.args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='Custom', data_path='', target='')
+    def test_multi_channel(self):
+        dataset_conf = [('./dataset/electricity/electricity.csv', 'OT'),
+                        ('./dataset/exchange_rate/exchange_rate.csv', 'OT'),
+                        ('./dataset/illness/national_illness.csv', 'OT'),
+                        ('./dataset/traffic/traffic.csv', 'OT'),
+                        ('./dataset/weather/weather.csv', 'OT'), ]
+        args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='Custom', data_path='', target='')
+        for path, ot in dataset_conf:
+            args.data_path = path
+            args.target = ot
+            dataset = get_dataset(args)
 
-    def test_visualizer(self):
-        for path, ot in self.dataset_conf:
-            self.args.data_path = path
-            self.args.target = ot
-            dataset = get_dataset(self.args)
-
-            data_visualize(dataset, 100)
+            data_visualize(dataset, 200)
             self.assertEqual('y', input('Is the dataset plot correctly? (y/n)'))
+
+    def test_single_channel(self):
+        args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='M4',
+                    train_data_path='./dataset/m4/Hourly-train.csv', test_data_path='./dataset/m4/Hourly-test.csv')
+        dataset = get_dataset(args)
+
+        data_visualize(dataset, 30)
+        self.assertEqual('y', input('Is the dataset plot correctly? (y/n)'))

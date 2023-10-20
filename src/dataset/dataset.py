@@ -40,6 +40,7 @@ class M4Dataset(DatasetBase):
             self.train_data: np.ndarray, shape=(n_samples, timesteps)
             self.test_data: np.ndarray, shape=(n_samples, timesteps)
         """
+        self.name = Path(self.train_data_path).stem.removesuffix('-train')
         train_data_path = self.train_data_path
         train_data = pd.read_csv(train_data_path)
         train_data.set_index('V1', inplace=True)
