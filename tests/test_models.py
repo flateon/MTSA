@@ -3,6 +3,7 @@ import unittest
 
 # Import the forecast models you want to test
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
+from src.models.base import MLForecastModel
 from tests.test_dataset import Args
 
 
@@ -48,3 +49,10 @@ class TestModels(unittest.TestCase):
 
         self.assertEqual(forecast.shape, self.fore_shape)
         # TODO add value assert
+
+    def test_ml_forecast(self):
+        model = MLForecastModel()
+        self.assertRaises(ValueError, model.forecast, None, None)
+        self.assertRaises(NotImplementedError, model.fit, None)
+        model.fitted = True
+        self.assertRaises(NotImplementedError, model.forecast, None, None)
