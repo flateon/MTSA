@@ -1,7 +1,10 @@
+import unittest
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+import argparse
 
 
 class DatasetBase:
@@ -23,7 +26,7 @@ class DatasetBase:
 class M4Dataset(DatasetBase):
     def __init__(self, args):
         self.train_data_path = args.train_data_path
-        self.test_data_path = args.train_data_path
+        self.test_data_path = args.test_data_path
         self.type = 'm4'
         super().__init__(args)
 
