@@ -33,7 +33,7 @@ ALL_MODEL = (
     'MeanForecast',
     'LinearRegression',
     'ExponentialSmoothing',
-    'TsfKNN',
+    # 'TsfKNN',
 )
 
 if __name__ == '__main__':
