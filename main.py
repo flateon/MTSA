@@ -27,12 +27,16 @@ def get_args():
     parser.add_argument('--pred_len', type=int, default=32, help='prediction sequence length')
 
     # model define
-    parser.add_argument('--model', type=str, default='MeanForecast', help='model name')
+    parser.add_argument('--model', type=str, default='TsfKNN', help='model name')
     parser.add_argument('--lamda', type=float, default=1, help='lamda for Yeo Johnson Transform')
-    parser.add_argument('--n_neighbors', type=int, default=1, help='number of neighbors used in TsfKNN')
-    parser.add_argument('--distance', type=str, default='euclidean', help='distance used in TsfKNN')
+    parser.add_argument('--n_neighbors', type=int, default=51, help='number of neighbors used in TsfKNN')
+    parser.add_argument('--distance', type=str, default='chebyshev', help='distance used in TsfKNN')
     parser.add_argument('--msas', type=str, default='MIMO', help='multi-step ahead strategy used in TsfKNN, options: '
                                                                  '[MIMO, recursive]')
+    parser.add_argument('--knn', type=str, default='lsh', help='knn method used in TsfKNN, options: '
+                                                               '[brute_force, lsh]')
+    parser.add_argument('--num_bits', type=int, default=4, help='num of bits for lsh method used in TsfKNN')
+    parser.add_argument('--num_hashes', type=int, default=4, help='num of hashes for lsh method used in TsfKNN')
     parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
 
     # transform define
