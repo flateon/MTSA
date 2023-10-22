@@ -36,7 +36,11 @@ class TestVisualizer(unittest.TestCase):
                         ('./dataset/exchange_rate/exchange_rate.csv', 'OT'),
                         ('./dataset/illness/national_illness.csv', 'OT'),
                         ('./dataset/traffic/traffic.csv', 'OT'),
-                        ('./dataset/weather/weather.csv', 'OT'), ]
+                        ('./dataset/weather/weather.csv', 'OT'),
+                        ('./dataset/ETT/ETTh1.csv', 'OT'),
+                        ('./dataset/ETT/ETTh2.csv', 'OT'),
+                        ('./dataset/ETT/ETTm1.csv', 'OT'),
+                        ('./dataset/ETT/ETTm2.csv', 'OT'), ]
         args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='Custom', data_path='', target='')
         for path, ot in dataset_conf:
             args.data_path = path
