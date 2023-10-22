@@ -10,6 +10,18 @@ class TsfKNN(MLForecastModel):
         self.k = args.n_neighbors
         if args.distance == 'euclidean':
             self.distance = euclidean
+        elif args.distance == 'manhattan':
+            self.distance = manhattan
+        elif args.distance == 'chebyshev':
+            self.distance = chebyshev
+        elif args.distance == 'minkowski':
+            self.distance = minkowski
+        elif args.distance == 'cosine':
+            self.distance = cosine
+        elif args.distance == 'decompose':
+            self.distance = Decompose(distance=chebyshev)
+        elif args.distance == 'zero':
+            self.distance = zero
         self.msas = args.msas
         super().__init__()
 
