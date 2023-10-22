@@ -142,11 +142,15 @@ class LSH:
         for i, c in enumerate(code):
             candidates.update(self.hash_tables[i][c])
 
-        # Brute-force search to find the exact nearest neighbors
-
-        candidates_idx = np.array(list(candidates))
-        self.brute_force.insert(self.vectors[candidates_idx])
-        pred = candidates_idx[self.brute_force.query(query_vector)]
+        # Brute-force search to find the exact nearest neighbors in candidates
+        if len(candidates) > self.brute_force.k:
+            candidates_idx = np.array(list(candidates))
+            self.brute_force.insert(self.vectors[candidates_idx])
+            pred = candidates_idx[self.brute_force.query(query_vector)]
+        else:
+            # If the number of candidates is less than k, use full brute-force search
+            self.brute_force.insert(self.vectors)
+            pred = self.brute_force.query(query_vector)
 
         if return_acc:
             self.brute_force.insert(self.vectors)
