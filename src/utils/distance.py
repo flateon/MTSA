@@ -32,7 +32,7 @@ def zero(a, b):
     return np.zeros(len(b))
 
 
-class Decompose:
+class DecomposeDistance:
     def __init__(self, period=24, weight=(0.1, 0.5, 0.4), distance=euclidean):
         self.period = period
         self.weight = weight

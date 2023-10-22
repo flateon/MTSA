@@ -3,7 +3,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from tqdm import tqdm
 
 from src.models.base import MLForecastModel
-from src.utils.distance import euclidean, manhattan, chebyshev, minkowski, cosine, Decompose, zero
+from src.utils.distance import euclidean, manhattan, chebyshev, minkowski, cosine, DecomposeDistance, zero
 
 
 class TsfKNN(MLForecastModel):
@@ -20,7 +20,7 @@ class TsfKNN(MLForecastModel):
         elif args.distance == 'cosine':
             self.distance = cosine
         elif args.distance == 'decompose':
-            self.distance = Decompose(distance=chebyshev)
+            self.distance = DecomposeDistance(distance=chebyshev)
         elif args.distance == 'zero':
             self.distance = zero
         self.msas = args.msas
