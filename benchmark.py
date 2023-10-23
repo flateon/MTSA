@@ -3,10 +3,48 @@ import random
 
 import numpy as np
 
-from main import get_model, get_transform, get_args
+from main import get_model, get_transform
 from src.dataset.dataset import get_dataset
 from trainer import MLTrainer
 import pandas as pd
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+
+    # dataset config
+    parser.add_argument('--data_path', type=str, default='./dataset/ETT/ETTh1.csv')
+    parser.add_argument('--train_data_path', type=str, default='./dataset/m4/Daily-train.csv')
+    parser.add_argument('--test_data_path', type=str, default='./dataset/m4/Daily-test.csv')
+    parser.add_argument('--dataset', type=str, default='Custom', help='dataset type, options: [M4, ETT, Custom]')
+    parser.add_argument('--target', type=str, default='OT', help='target feature')
+    parser.add_argument('--ratio_train', type=int, default=0.7, help='train dataset length')
+    parser.add_argument('--ratio_val', type=int, default=0, help='validate dataset length')
+    parser.add_argument('--ratio_test', type=int, default=0.3, help='input sequence length')
+
+    # forcast task config
+    parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
+    parser.add_argument('--pred_len', type=int, default=32, help='prediction sequence length')
+
+    # model define
+    parser.add_argument('--model', type=str, default='TsfKNN', help='model name')
+    parser.add_argument('--lamda', type=float, default=1, help='lamda for Yeo Johnson Transform')
+    parser.add_argument('--n_neighbors', type=int, default=51, help='number of neighbors used in TsfKNN')
+    parser.add_argument('--distance', type=str, default='chebyshev', help='distance used in TsfKNN')
+    parser.add_argument('--msas', type=str, default='MIMO', help='multi-step ahead strategy used in TsfKNN, options: '
+                                                                 '[MIMO, recursive]')
+    parser.add_argument('--knn', type=str, default='lsh', help='knn method used in TsfKNN, options: '
+                                                               '[brute_force, lsh]')
+    parser.add_argument('--num_bits', type=int, default=8, help='num of bits for lsh method used in TsfKNN')
+    parser.add_argument('--num_hashes', type=int, default=1, help='num of hashes for lsh method used in TsfKNN')
+    parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
+
+    # transform define
+    parser.add_argument('--transform', type=str, default='IdentityTransform')
+
+    args = parser.parse_args()
+    return args
+
 
 ALL_DATASET = (
     ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),
@@ -37,10 +75,6 @@ ALL_MODEL = (
 )
 
 if __name__ == '__main__':
-    fix_seed = 2023
-    random.seed(fix_seed)
-    np.random.seed(fix_seed)
-
     args = get_args()
     print("| dataset | model | transform | mse | mae | mape | smape | mase |")
     results = []
@@ -56,6 +90,10 @@ if __name__ == '__main__':
             args.model = model_name
             for transform_name in ALL_TRANSFORM:
                 args.transform = transform_name
+
+                fix_seed = 2023
+                random.seed(fix_seed)
+                np.random.seed(fix_seed)
                 # create model
                 model = get_model(args)
                 # data transform
