@@ -12,7 +12,7 @@ class ZeroForecast(MLForecastModel):
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
-        return np.zeros((X.shape[0], pred_len))
+        return np.zeros((X.shape[0], pred_len, X.shape[2]))
 
 
 class MeanForecast(MLForecastModel):
@@ -23,7 +23,7 @@ class MeanForecast(MLForecastModel):
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
-        mean = np.mean(X, axis=-1, keepdims=True)
+        mean = np.mean(X, axis=1, keepdims=True)
         return np.repeat(mean, pred_len, axis=1)
 
 
