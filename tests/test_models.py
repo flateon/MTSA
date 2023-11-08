@@ -11,10 +11,10 @@ class TestModels(unittest.TestCase):
     def setUp(self):
         # (n_samples, timestamps, channels)
         self.X = np.random.rand(1, 1000, 7)
-        # (n_samples, timestamps)
-        self.X_test = np.random.rand(30, 96)
+        # (n_samples, timestamps, channels)
+        self.X_test = np.random.rand(30, 96, 7)
         self.pred_len = 32
-        self.fore_shape = (len(self.X_test), self.pred_len)
+        self.fore_shape = (len(self.X_test), self.pred_len, self.X_test.shape[2])
 
     def test_zero_forecast(self):
         model = ZeroForecast(None)

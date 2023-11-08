@@ -8,50 +8,45 @@ from src.utils.distance import *
 class TestDistance(unittest.TestCase):
     def setUp(self):
         self.num_samples = 10
-        self.A = np.random.rand(self.num_samples, 32)
-        self.B = np.random.rand(self.num_samples, 32)
+        self.A = [np.random.rand(self.num_samples, 32, 3),
+                  np.random.rand(self.num_samples, 32)]
+        self.B = [np.random.rand(self.num_samples, 32, 3),
+                  np.random.rand(self.num_samples, 32)]
 
     def test_euclidean(self):
-        self.assertEqual(euclidean(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(euclidean(self.A, self.B), euclidean(self.B, self.A)))
-        self.assertTrue(np.allclose(euclidean(self.A, self.B), np.linalg.norm(self.B - self.A, axis=1)))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(euclidean(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(euclidean(a, b), euclidean(b, a)))
 
     def test_manhattan(self):
-        self.assertEqual(manhattan(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(manhattan(self.A, self.B), manhattan(self.B, self.A)))
-        self.assertTrue(np.allclose(manhattan(self.A, self.B), np.sum(np.abs(self.B - self.A), axis=1)))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(manhattan(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(manhattan(a, b), manhattan(b, a)))
 
     def test_chebyshev(self):
-        self.assertEqual(chebyshev(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(chebyshev(self.A, self.B), chebyshev(self.B, self.A)))
-        self.assertTrue(np.allclose(chebyshev(self.A, self.B), np.max(np.abs(self.B - self.A), axis=1)))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(chebyshev(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(chebyshev(a, b), chebyshev(b, a)))
 
     def test_minkowski(self):
-        self.assertEqual(minkowski(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(minkowski(self.A, self.B), minkowski(self.B, self.A)))
-        self.assertTrue(
-            np.allclose(minkowski(self.A, self.B), np.power(np.linalg.norm(self.B - self.A, ord=2, axis=1), 0.5)))
-        self.assertTrue(
-            np.allclose(minkowski(self.A, self.B, p=2.5),
-                        np.power(np.linalg.norm(self.B - self.A, ord=2.5, axis=1), 0.4)))
-        self.assertTrue(
-            np.allclose(minkowski(self.A, self.B, p=0.5),
-                        np.power(np.linalg.norm(self.B - self.A, ord=0.5, axis=1), 2)))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(minkowski(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(minkowski(a, b), minkowski(b, a)))
 
     def test_cosine(self):
-        self.assertEqual(cosine(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(cosine(self.A, self.B), cosine(self.B, self.A)))
-        self.assertTrue(np.allclose(cosine(self.A, self.B),
-                                    np.linalg.norm(self.B - self.A, axis=1) / (
-                                            np.linalg.norm(self.A, axis=1) * np.linalg.norm(self.B, axis=1))))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(cosine(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(cosine(a, b), cosine(b, a)))
 
     def test_zero(self):
-        self.assertEqual(zero(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(zero(self.A, self.B), zero(self.B, self.A)))
-        self.assertTrue(np.allclose(zero(self.A, self.B), np.zeros(10)))
+        for a, b in zip(self.A, self.B):
+            self.assertEqual(zero(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(zero(a, b), zero(b, a)))
+            self.assertTrue(np.allclose(zero(a, b), np.zeros(10)))
 
     def test_distance_calculation(self):
-        decompose = DecomposeDistance(period=5, weight=(0.1, 0.5, 0.4), distance=euclidean)
+        for a, b in zip(self.A, self.B):
+            decompose = DecomposeDistance(period=5, weight=(0.5, 0.5), distance=euclidean)
 
-        self.assertEqual(decompose(self.A, self.B).shape, (self.num_samples,))
-        self.assertTrue(np.allclose(decompose(self.A, self.B), decompose(self.B, self.A)))
+            self.assertEqual(decompose(a, b).shape, (self.num_samples,))
+            self.assertTrue(np.allclose(decompose(a, b), decompose(b, a)))

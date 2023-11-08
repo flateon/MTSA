@@ -16,11 +16,12 @@ def get_args():
     parser.add_argument('--data_path', type=str, default='./dataset/ETT/ETTh1.csv')
     parser.add_argument('--train_data_path', type=str, default='./dataset/m4/Daily-train.csv')
     parser.add_argument('--test_data_path', type=str, default='./dataset/m4/Daily-test.csv')
-    parser.add_argument('--dataset', type=str, default='Custom', help='dataset type, options: [M4, ETT, Custom]')
+    parser.add_argument('--dataset', type=str, default='ETT', help='dataset type, options: [M4, ETT, Custom]')
     parser.add_argument('--target', type=str, default='OT', help='target feature')
     parser.add_argument('--ratio_train', type=int, default=0.7, help='train dataset length')
     parser.add_argument('--ratio_val', type=int, default=0, help='validate dataset length')
     parser.add_argument('--ratio_test', type=int, default=0.3, help='input sequence length')
+    parser.add_argument('--frequency', type=str, default='h', help='frequency of time series data, options: [h, m]')
 
     # forcast task config
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')

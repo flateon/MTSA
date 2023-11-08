@@ -32,23 +32,25 @@ class TestPearsonCorrelation(unittest.TestCase):
 
 class TestVisualizer(unittest.TestCase):
     def test_multi_channel(self):
-        dataset_conf = [('./dataset/electricity/electricity.csv', 'OT'),
-                        ('./dataset/exchange_rate/exchange_rate.csv', 'OT'),
-                        ('./dataset/illness/national_illness.csv', 'OT'),
-                        ('./dataset/traffic/traffic.csv', 'OT'),
-                        ('./dataset/weather/weather.csv', 'OT'),
-                        ('./dataset/ETT/ETTh1.csv', 'OT'),
-                        ('./dataset/ETT/ETTh2.csv', 'OT'),
-                        ('./dataset/ETT/ETTm1.csv', 'OT'),
-                        ('./dataset/ETT/ETTm2.csv', 'OT'), ]
-        args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='Custom', data_path='', target='')
-        for path, ot in dataset_conf:
-            args.data_path = path
-            args.target = ot
+        self.dataset_conf = [
+            {'data_path': './dataset/electricity/electricity.csv', 'dataset': 'Custom'},
+            {'data_path': './dataset/exchange_rate/exchange_rate.csv', 'dataset': 'Custom'},
+            {'data_path': './dataset/illness/national_illness.csv', 'dataset': 'Custom'},
+            {'data_path': './dataset/traffic/traffic.csv', 'dataset': 'Custom'},
+            {'data_path': './dataset/weather/weather.csv', 'dataset': 'Custom'},
+            {'data_path': './dataset/ETT/ETTh1.csv', 'dataset': 'ETT', 'frequency': 'h'},
+            {'data_path': './dataset/ETT/ETTh2.csv', 'dataset': 'ETT', 'frequency': 'h'},
+            {'data_path': './dataset/ETT/ETTm1.csv', 'dataset': 'ETT', 'frequency': 'm'},
+            {'data_path': './dataset/ETT/ETTm2.csv', 'dataset': 'ETT', 'frequency': 'm'},
+        ]
+        args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='', data_path='', target='OT')
+        for kwargs in self.dataset_conf:
+            for k, v in kwargs.items():
+                setattr(args, k, v)
             dataset = get_dataset(args)
 
             data_visualize(dataset, 200)
-            self.assertEqual('y', input('Is the dataset plot correctly? (y/n)'))
+        self.assertEqual('y', input('Is all dataset plot correctly? (y/n)'))
 
     def test_single_channel(self):
         args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='M4',
