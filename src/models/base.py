@@ -3,7 +3,7 @@ import numpy as np
 
 class MLForecastModel:
 
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.fitted = False
 
     def fit(self, X: np.ndarray) -> None:

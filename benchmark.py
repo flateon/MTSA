@@ -73,6 +73,7 @@ ALL_MODEL = (
     'LinearRegression',
     'ExponentialSmoothing',
     # 'TsfKNN',
+    'DLinear',
 )
 
 if __name__ == '__main__':

@@ -9,15 +9,17 @@ from argparse import Namespace as Args
 
 class TestModels(unittest.TestCase):
     def setUp(self):
-        # (n_samples, timestamps, channels)
-        self.X = np.random.rand(1, 1000, 7)
-        # (n_samples, timestamps, channels)
-        self.X_test = np.random.rand(30, 96, 7)
+        self.seq_len = 96
         self.pred_len = 32
-        self.fore_shape = (len(self.X_test), self.pred_len, self.X_test.shape[2])
+        self.n_channels = 7
+        # (n_samples, timestamps, channels)
+        self.X = np.random.rand(1, 1000, self.n_channels)
+        # (n_samples, timestamps, channels)
+        self.X_test = np.random.rand(30, self.seq_len, self.n_channels)
+        self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
 
     def test_zero_forecast(self):
-        model = ZeroForecast(None)
+        model = ZeroForecast()
         model.fit(self.X)
         forecast = model.forecast(self.X_test, self.pred_len)
 
@@ -25,7 +27,7 @@ class TestModels(unittest.TestCase):
         self.assertTrue(np.all(forecast == 0))
 
     def test_mean_forecast(self):
-        model = MeanForecast(None)
+        model = MeanForecast()
         model.fit(self.X)
         forecast = model.forecast(self.X_test, self.pred_len)
 

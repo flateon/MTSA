@@ -5,9 +5,6 @@ from src.models.base import MLForecastModel
 
 
 class ZeroForecast(MLForecastModel):
-    def __init__(self, args) -> None:
-        super().__init__()
-
     def _fit(self, X: np.ndarray) -> None:
         pass
 
@@ -16,9 +13,6 @@ class ZeroForecast(MLForecastModel):
 
 
 class MeanForecast(MLForecastModel):
-    def __init__(self, args) -> None:
-        super().__init__()
-
     def _fit(self, X: np.ndarray) -> None:
         pass
 
@@ -30,7 +24,6 @@ class MeanForecast(MLForecastModel):
 class LinearRegression(MLForecastModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
-        self.fitted = False
         # X: np.ndarray, shape=(n_samples, timestamps, n_channels)
         self.X = None
 
