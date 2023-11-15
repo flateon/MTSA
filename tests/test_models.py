@@ -17,10 +17,11 @@ class TestModels(unittest.TestCase):
         # (n_samples, timestamps, channels)
         self.X_test = np.random.rand(30, self.seq_len, self.n_channels)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
+        self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len)
 
     def test_zero_forecast(self):
         model = ZeroForecast()
-        model.fit(self.X)
+        model.fit(self.X, self.args)
         forecast = model.forecast(self.X_test, self.pred_len)
 
         self.assertEqual(forecast.shape, self.fore_shape)
@@ -28,7 +29,7 @@ class TestModels(unittest.TestCase):
 
     def test_mean_forecast(self):
         model = MeanForecast()
-        model.fit(self.X)
+        model.fit(self.X, self.args)
         forecast = model.forecast(self.X_test, self.pred_len)
 
         self.assertEqual(forecast.shape, self.fore_shape)
@@ -38,7 +39,7 @@ class TestModels(unittest.TestCase):
 
     def test_linear_regression(self):
         model = LinearRegression()
-        model.fit(self.X)
+        model.fit(self.X, self.args)
         forecast = model.forecast(self.X_test, self.pred_len)
 
         self.assertEqual(forecast.shape, self.fore_shape)
@@ -46,7 +47,7 @@ class TestModels(unittest.TestCase):
 
     def test_exponential_smoothing(self):
         model = ExponentialSmoothing(Args(ew=0.5))
-        model.fit(self.X)
+        model.fit(self.X, self.args)
         forecast = model.forecast(self.X_test, self.pred_len)
 
         self.assertEqual(forecast.shape, self.fore_shape)
@@ -55,7 +56,7 @@ class TestModels(unittest.TestCase):
     def test_ml_forecast(self):
         model = MLForecastModel()
         self.assertRaises(ValueError, model.forecast, None, None)
-        self.assertRaises(NotImplementedError, model.fit, None)
+        self.assertRaises(NotImplementedError, model.fit, None, self.args)
         model.fitted = True
         self.assertRaises(NotImplementedError, model.forecast, None, None)
 
@@ -65,7 +66,7 @@ class TestModels(unittest.TestCase):
                 for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
                     args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2)
                     model = TsfKNN(args)
-                    model.fit(self.X)
+                    model.fit(self.X, args)
                     forecast = model.forecast(self.X_test, self.pred_len)
 
                     self.assertEqual(forecast.shape, self.fore_shape)
@@ -74,7 +75,7 @@ class TestModels(unittest.TestCase):
         # lsh test if the number of candidates is less than k
         args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2)
         model = TsfKNN(args)
-        model.fit(self.X)
+        model.fit(self.X, args)
         forecast = model.forecast(self.X_test, self.pred_len)
 
         self.assertEqual(forecast.shape, self.fore_shape)

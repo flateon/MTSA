@@ -5,7 +5,7 @@ from src.models.base import MLForecastModel
 
 
 class ZeroForecast(MLForecastModel):
-    def _fit(self, X: np.ndarray) -> None:
+    def _fit(self, X: np.ndarray, args) -> None:
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -13,7 +13,7 @@ class ZeroForecast(MLForecastModel):
 
 
 class MeanForecast(MLForecastModel):
-    def _fit(self, X: np.ndarray) -> None:
+    def _fit(self, X: np.ndarray, args) -> None:
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -25,15 +25,30 @@ class LinearRegression(MLForecastModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
         # X: np.ndarray, shape=(n_samples, timestamps, n_channels)
-        self.X = None
+        self.W = None
 
-    def _fit(self, X: np.ndarray):
+    def _fit(self, X: np.ndarray, args):
         """
         :param:
         X: np.ndarray, shape=(n_samples, timestamps, n_channels)
         """
         # self.X = X.transpose(0, 2, 1).reshape(-1, X.shape[1])
-        self.X = X
+        n_samples, train_len, n_channels = X.shape
+        seq_len = args.seq_len
+        pred_len = args.pred_len
+
+        self.W = np.zeros((n_channels, seq_len + 1, pred_len))
+
+        window_len = seq_len + pred_len
+
+        for i in range(n_channels):
+            # shape=(n, window_len)
+            train_data = np.concatenate([sliding_window_view(x, window_len) for x in X[..., i]])
+            x, y = np.split(train_data, [seq_len], axis=1)
+
+            x = np.c_[np.ones(len(x)), x]
+
+            self.W[i] = np.linalg.pinv(x.T.dot(x)).dot(x.T).dot(y)
 
     def _forecast(self, X_test: np.ndarray, pred_len) -> np.ndarray:
         """
@@ -42,28 +57,11 @@ class LinearRegression(MLForecastModel):
         pred_len: int
         :return: forecast: shape=(n_samples, pred_len, channels)
         """
-        n_samples, train_len, n_channels = X_test.shape
-        window_len = train_len + pred_len
+        n_samples, timestamps, channels = X_test.shape
+        X_test_c = np.zeros((n_samples, timestamps + 1, channels))
+        X_test_c[:, 1:, :] = X_test
 
-        pred = np.zeros((n_samples, pred_len, n_channels))
-
-        for i in range(n_channels):
-            X = self.X[..., i]
-            X_test_ = X_test[..., i]
-
-            # shape=(n, window_len)
-            train_data = np.concatenate([sliding_window_view(x, window_len) for x in X])
-            x, y = np.split(train_data, [train_len], axis=1)
-
-            x = np.c_[np.ones(len(x)), x]
-
-            # shape=(train_len + 1, pred_len)
-            weight = np.linalg.pinv(x.T.dot(x)).dot(x.T).dot(y)
-
-            X_test_ = np.c_[np.ones(len(X_test_)), X_test_]
-
-            pred[..., i] = X_test_.dot(weight)
-        return pred
+        return np.einsum('nsc,csp->npc', X_test_c, self.W)
 
 
 class ExponentialSmoothing(MLForecastModel):
@@ -73,7 +71,7 @@ class ExponentialSmoothing(MLForecastModel):
         self.ew = arg.ew
         self.target = None
 
-    def _fit(self, X: np.ndarray):
+    def _fit(self, X: np.ndarray, args):
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:

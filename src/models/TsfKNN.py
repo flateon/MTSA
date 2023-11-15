@@ -30,7 +30,7 @@ class TsfKNN(MLForecastModel):
             self.knn = LSH(args.num_bits, args.num_hashes, self.k, self.distance)
         super().__init__()
 
-    def _fit(self, X: np.ndarray) -> None:
+    def _fit(self, X: np.ndarray, args) -> None:
         self.X = X
 
     def _search(self, x, X_s, seq_len, pred_len):

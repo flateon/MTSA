@@ -9,10 +9,10 @@ class MLTrainer:
         self.transform = transform
         self.dataset = dataset
 
-    def train(self):
+    def train(self, *args, **kwargs):
         train_X = self.dataset.train_data
         t_X = self.transform.transform(train_X)
-        self.model.fit(t_X)
+        self.model.fit(t_X, *args, **kwargs)
 
     def test(self, dataset, seq_len=96, pred_len=32):
         if dataset.type == 'm4':
