@@ -33,7 +33,7 @@ class LinearRegression(MLForecastModel):
         X: np.ndarray, shape=(n_samples, timestamps, n_channels)
         """
         # self.X = X.transpose(0, 2, 1).reshape(-1, X.shape[1])
-        self.X = X.reshape(X.shape[0], -1)
+        self.X = X
 
     def _forecast(self, X_test: np.ndarray, pred_len) -> np.ndarray:
         """
@@ -43,22 +43,27 @@ class LinearRegression(MLForecastModel):
         :return: forecast: shape=(n_samples, pred_len, channels)
         """
         n_samples, train_len, n_channels = X_test.shape
-        X_test = X_test.reshape(n_samples, -1)
+        window_len = train_len + pred_len
 
-        window_len = (train_len + pred_len) * n_channels
+        pred = np.zeros((n_samples, pred_len, n_channels))
 
-        # shape=(n, window_len)
-        train_data = np.concatenate([sliding_window_view(x, window_len) for x in self.X])
-        x, y = np.split(train_data, [train_len * n_channels], axis=1)
+        for i in range(n_channels):
+            X = self.X[..., i]
+            X_test_ = X_test[..., i]
 
-        x = np.c_[np.ones(len(x)), x]
+            # shape=(n, window_len)
+            train_data = np.concatenate([sliding_window_view(x, window_len) for x in X])
+            x, y = np.split(train_data, [train_len], axis=1)
 
-        # shape=(train_len + 1, pred_len)
-        weight = np.linalg.pinv(x.T.dot(x)).dot(x.T).dot(y)
+            x = np.c_[np.ones(len(x)), x]
 
-        X_test = np.c_[np.ones(len(X_test)), X_test]
+            # shape=(train_len + 1, pred_len)
+            weight = np.linalg.pinv(x.T.dot(x)).dot(x.T).dot(y)
 
-        return X_test.dot(weight).reshape(-1, pred_len, n_channels)
+            X_test_ = np.c_[np.ones(len(X_test_)), X_test_]
+
+            pred[..., i] = X_test_.dot(weight)
+        return pred
 
 
 class ExponentialSmoothing(MLForecastModel):
