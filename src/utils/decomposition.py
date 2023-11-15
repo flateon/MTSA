@@ -14,17 +14,16 @@ def moving_average(X, period=25):
     n_samples, timestamp, n_channels = X.shape
     X = X.transpose((0, 2, 1)).reshape((-1, timestamp))
 
-    trend_a = np.zeros_like(X)
+    trend = np.zeros_like(X)
     filter = np.repeat(1.0 / period, period)
 
     for i, x in enumerate(X):
         # x_pad = np.pad(x, ((period - 1) // 2, (period) // 2), mode='wrap')
-        trend = np.convolve(x, filter, mode='same')
-        trend_a[i] = trend
-    seasonal_a = X - trend_a
-    trend_a = trend_a.reshape((n_samples, n_channels, timestamp)).transpose((0, 2, 1))
-    seasonal_a = seasonal_a.reshape((n_samples, n_channels, timestamp)).transpose((0, 2, 1))
-    return trend_a, seasonal_a
+        trend[i] = np.convolve(x, filter, mode='same')
+    seasonal = X - trend
+    trend = trend.reshape((n_samples, n_channels, timestamp)).transpose((0, 2, 1))
+    seasonal = seasonal.reshape((n_samples, n_channels, timestamp)).transpose((0, 2, 1))
+    return trend, seasonal
 
 
 def differential_decomposition(x):
