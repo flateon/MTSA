@@ -32,23 +32,35 @@ class LinearRegression(MLForecastModel):
         :param:
         X: np.ndarray, shape=(n_samples, timestamps, n_channels)
         """
-        # self.X = X.transpose(0, 2, 1).reshape(-1, X.shape[1])
         n_samples, train_len, n_channels = X.shape
         seq_len = args.seq_len
         pred_len = args.pred_len
 
-        self.W = np.zeros((n_channels, seq_len + 1, pred_len))
-
         window_len = seq_len + pred_len
 
+        train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
+        x_w, y_w = np.split(train_data, [seq_len], axis=1)
+
+        self.calc_weight(x_w, y_w)
+
+    def calc_weight(self, X, Y):
+        """
+        :param:
+        X: np.ndarray, shape=(n_samples, seq_len, n_channels)
+        Y: np.ndarray, shape=(n_samples, pred_len, n_channels)
+        :return:
+        self.W: np.ndarray, shape=(n_channels, seq_len + 1, pred_len)
+        """
+        _, seq_len, n_channels = X.shape
+        _, pred_len, _ = Y.shape
+        self.W = np.zeros((n_channels, seq_len + 1, pred_len))
+
         for i in range(n_channels):
-            # shape=(n, window_len)
-            train_data = np.concatenate([sliding_window_view(x, window_len) for x in X[..., i]])
-            x, y = np.split(train_data, [seq_len], axis=1)
-
+            x, y = X[..., i], Y[..., i]
             x = np.c_[np.ones(len(x)), x]
-
             self.W[i] = np.linalg.pinv(x.T.dot(x)).dot(x.T).dot(y)
+        self.fitted = True
+        return self.W
 
     def _forecast(self, X_test: np.ndarray, pred_len) -> np.ndarray:
         """
