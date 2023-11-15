@@ -31,10 +31,12 @@ def differential_decomposition(x):
     """
     Differential Decomposition Algorithm
     Args:
-        x (numpy.ndarray): Input time series data
+        x (numpy.ndarray): Input time series data (n_samples, timestamp, n_channels)
     Returns:
         trend (numpy.ndarray): Trend component
         seasonal (numpy.ndarray): Seasonal component
     """
+    seasonal = np.diff(x, axis=1)
+    trend = x[:, 1:] - seasonal
+    return trend, seasonal
 
-    raise NotImplementedError

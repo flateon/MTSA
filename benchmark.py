@@ -48,23 +48,23 @@ def get_args():
 
 
 ALL_DATASET = (
-    ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),
-    ('./dataset/exchange_rate/exchange_rate.csv', {'lamda': 2.8284}),
-    ('./dataset/illness/national_illness.csv', {'lamda': 0.8973}),
-    ('./dataset/traffic/traffic.csv', {'lamda': 3.5261}),
-    ('./dataset/weather/weather.csv', {'lamda': 2.3604}),
+    # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),
+    # ('./dataset/exchange_rate/exchange_rate.csv', {'lamda': 2.8284}),
+    # ('./dataset/illness/national_illness.csv', {'lamda': 0.8973}),
+    # ('./dataset/traffic/traffic.csv', {'lamda': 3.5261}),
+    # ('./dataset/weather/weather.csv', {'lamda': 2.3604}),
     ('./dataset/ETT/ETTh1.csv', {'lamda': 0.5505}),
-    ('./dataset/ETT/ETTh2.csv', {'lamda': 0.7854}),
-    ('./dataset/ETT/ETTm1.csv', {'lamda': 0.5501}),
-    ('./dataset/ETT/ETTm2.csv', {'lamda': 0.7837}),
+    # ('./dataset/ETT/ETTh2.csv', {'lamda': 0.7854}),
+    # ('./dataset/ETT/ETTm1.csv', {'lamda': 0.5501}),
+    # ('./dataset/ETT/ETTm2.csv', {'lamda': 0.7837}),
 )
 
 ALL_TRANSFORM = (
-    'IdentityTransform',
-    'NormalizationTransform',
+    # 'IdentityTransform',
+    # 'NormalizationTransform',
     'StandardizationTransform',
-    'MeanNormalizationTransform',
-    'YeoJohnsonTransform',
+    # 'MeanNormalizationTransform',
+    # 'YeoJohnsonTransform',
 )
 
 ALL_MODEL = (
