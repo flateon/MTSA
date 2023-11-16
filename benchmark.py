@@ -78,7 +78,7 @@ ALL_MODEL = (
 
 if __name__ == '__main__':
     args = get_args()
-    print("| dataset | model | transform | mse | mae | mape | smape | mase |")
+    print("| dataset  | model                | transform          | mse    | mae    | mape   | smape  | mase   |")
     results = []
 
     for dataset_path, kwargs in ALL_DATASET:
@@ -103,11 +103,11 @@ if __name__ == '__main__':
                 # create trainer
                 trainer = MLTrainer(model=model, transform=transform, dataset=dataset)
                 # train model
-                trainer.train()
+                trainer.train(args)
                 # evaluate model
                 mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
                 print(
-                    f"| {dataset.name} | {model_name} | {transform_name.removesuffix('Transform')} | {mse:.4g} | {mae:.4g} | {mape:.4g} | {smape:.4g} | {mase:.4g} |")
+                    f"| {dataset.name:8} | {model_name:20} | {transform_name.removesuffix('Transform'):18} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} |")
                 results.append(
                     [dataset.name, model_name, transform_name.removesuffix('Transform'), mse, mae, mape, smape, mase])
 
