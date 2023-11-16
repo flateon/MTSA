@@ -1,6 +1,7 @@
 import numpy as np
 import unittest
 
+from src.models.DLinear import DLinear
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.models.base import MLForecastModel
@@ -44,6 +45,14 @@ class TestModels(unittest.TestCase):
 
         self.assertEqual(forecast.shape, self.fore_shape)
         # TODO add value assert
+
+    def test_d_linear(self):
+        for individual in (True, False):
+            model = DLinear(individual)
+            model.fit(self.X, self.args)
+            forecast = model.forecast(self.X_test, self.pred_len)
+
+            self.assertEqual(forecast.shape, self.fore_shape)
 
     def test_exponential_smoothing(self):
         model = ExponentialSmoothing(Args(ew=0.5))

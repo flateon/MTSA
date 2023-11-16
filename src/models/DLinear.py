@@ -8,7 +8,7 @@ from src.utils.decomposition import moving_average
 
 
 class DLinear(MLForecastModel):
-    def __init__(self, args, individual=True) -> None:
+    def __init__(self, individual=True) -> None:
         super().__init__()
         self.model_trend = LinearRegression()
         self.model_seasonal = LinearRegression()
