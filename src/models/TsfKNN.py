@@ -1,3 +1,5 @@
+from argparse import Namespace
+
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 from tqdm import tqdm
@@ -7,7 +9,8 @@ from src.utils.distance import euclidean, manhattan, chebyshev, minkowski, cosin
 
 
 class TsfKNN(MLForecastModel):
-    def __init__(self, args):
+    def __init__(self, args: Namespace):
+        super().__init__()
         self.k = args.n_neighbors
         if args.distance == 'euclidean':
             self.distance = euclidean
@@ -23,48 +26,72 @@ class TsfKNN(MLForecastModel):
             self.distance = DecomposeDistance(distance=chebyshev)
         elif args.distance == 'zero':
             self.distance = zero
-        self.msas = args.msas
+        else:
+            raise ValueError(f'Unknown distance {args.distance}')
+
         if args.knn == 'brute_force':
             self.knn = BruteForce(self.distance, self.k)
         elif args.knn == 'lsh':
             self.knn = LSH(args.num_bits, args.num_hashes, self.k, self.distance)
-        super().__init__()
+        else:
+            raise ValueError(f'Unknown knn {args.knn}')
+
+        if args.embedding in ('lag', 'fourier'):
+            self.embedding = args.embedding
+        else:
+            raise ValueError(f'Unknown embedding {args.embedding}')
+
+        if args.msas in ('MIMO', 'recursive'):
+            self.msas = args.msas
+        else:
+            raise ValueError(f'Unknown msas {args.msas}')
 
     def _fit(self, X: np.ndarray, args) -> None:
         self.X = X
 
-    def _search(self, x, X_s, seq_len, pred_len):
+    def _search(self, x, y, seq_len, pred_len):
         """
         :param x: (seq_len, channels)
-        :param X_s: (num_vectors, seq_len, channels)
+        :param y: (num_vectors, seq_len, channels)
         :param seq_len: int
         :param pred_len: int
         :return: (pred_len, channels)
         """
         if self.msas == 'MIMO':
             indices_of_smallest_k = self.knn.query(x)
-            neighbor_fore = X_s[indices_of_smallest_k, seq_len:]
+            neighbor_fore = y[indices_of_smallest_k]
             x_fore = np.mean(neighbor_fore, axis=0)
             return x_fore
         elif self.msas == 'recursive':
             indices_of_smallest_k = self.knn.query(x)
-            neighbor_fore = X_s[indices_of_smallest_k, seq_len:seq_len+1, :]
+            neighbor_fore = y[indices_of_smallest_k, 0:1]
             x_fore = np.mean(neighbor_fore, axis=0, keepdims=False)
             x_new = np.concatenate((x[1:], x_fore))
             if pred_len == 1:
                 return x_fore
             else:
-                return np.concatenate((x_fore, self._search(x_new, X_s, seq_len, pred_len - 1)), axis=0)
+                return np.concatenate((x_fore, self._search(x_new, y, seq_len, pred_len - 1)), axis=0)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
+        """
+        :param X: (n_samples, timestamps, channels)
+        :param pred_len: int
+        :return: forecast: (n_samples, pred_len, channels)
+        """
         fore = []
         bs, seq_len, channels = X.shape
-        X_s = sliding_window_view(self.X, (seq_len + pred_len, channels), axis=(1, 2)).reshape(-1, seq_len + pred_len,
-                                                                                               channels)
-        self.knn.insert(X_s[:, :seq_len, :])
+        window_len = seq_len + pred_len
+
+        train_data = sliding_window_view(self.X, (window_len, channels), axis=(1, 2)).reshape(-1, window_len, channels)
+        x_train, y_train = np.split(train_data, [seq_len], axis=1)
+
+        if self.embedding == 'fourier':
+            x_train = np.fft.rfftn(x_train, axes=(1,))
+            X = np.fft.rfftn(X, axes=(1,))
+        self.knn.insert(x_train)
 
         for x in tqdm(X, leave=False):
-            x_fore = self._search(x, X_s, seq_len, pred_len)
+            x_fore = self._search(x, y_train, seq_len, pred_len)
             fore.append(x_fore)
         fore = np.stack(fore, axis=0)
         return fore
@@ -167,7 +194,7 @@ class LSH:
             self.brute_force.insert(self.vectors[candidates_idx])
             pred = candidates_idx[self.brute_force.query(query_vector)]
         else:
-            # If the number of candidates is less than k, use full brute-force search
+            # If the number of candidates is less than k, full brute-force search
             self.brute_force.insert(self.vectors)
             pred = self.brute_force.query(query_vector)
 

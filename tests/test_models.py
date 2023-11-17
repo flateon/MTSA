@@ -12,11 +12,11 @@ class TestModels(unittest.TestCase):
     def setUp(self):
         self.seq_len = 96
         self.pred_len = 32
-        self.n_channels = 7
+        self.n_channels = 3
         # (n_samples, timestamps, channels)
         self.X = np.random.rand(1, 1000, self.n_channels)
         # (n_samples, timestamps, channels)
-        self.X_test = np.random.rand(30, self.seq_len, self.n_channels)
+        self.X_test = np.random.rand(10, self.seq_len, self.n_channels)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
         self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len)
 
@@ -71,18 +71,19 @@ class TestModels(unittest.TestCase):
 
     def test_tsf_knn(self):
         for m in ('MIMO', 'recursive'):
-            for k in ('brute_force', 'lsh'):
-                for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
-                    args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2)
-                    model = TsfKNN(args)
-                    model.fit(self.X, args)
-                    forecast = model.forecast(self.X_test, self.pred_len)
+            for e in ('lag', 'fourier'):
+                for k in ('brute_force', 'lsh'):
+                    for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
+                        args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2, embedding=e)
+                        model = TsfKNN(args)
+                        model.fit(self.X, args)
+                        forecast = model.forecast(self.X_test, self.pred_len)
 
-                    self.assertEqual(forecast.shape, self.fore_shape)
-                    # TODO add value assert
+                        self.assertEqual(forecast.shape, self.fore_shape)
+                        # TODO add value assert
 
         # lsh test if the number of candidates is less than k
-        args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2)
+        args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2, embedding='lag')
         model = TsfKNN(args)
         model.fit(self.X, args)
         forecast = model.forecast(self.X_test, self.pred_len)
@@ -92,3 +93,9 @@ class TestModels(unittest.TestCase):
         # test lsh
         _, acc = model.knn.query(self.X_test[0], return_acc=True)
         self.assertTrue(0 <= acc <= 1)
+
+        # test raise
+        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo'))
+        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag'))
+        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag'))
+        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag'))
