@@ -48,7 +48,7 @@ class TestModels(unittest.TestCase):
 
     def test_d_linear(self):
         for individual in (True, False):
-            model = DLinear(individual)
+            model = DLinear(Args(individual=individual))
             model.fit(self.X, self.args)
             forecast = model.forecast(self.X_test, self.pred_len)
 
@@ -83,7 +83,8 @@ class TestModels(unittest.TestCase):
                         # TODO add value assert
 
         # lsh test if the number of candidates is less than k
-        args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2, embedding='lag')
+        args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2,
+                    embedding='lag')
         model = TsfKNN(args)
         model.fit(self.X, args)
         forecast = model.forecast(self.X_test, self.pred_len)
@@ -95,7 +96,11 @@ class TestModels(unittest.TestCase):
         self.assertTrue(0 <= acc <= 1)
 
         # test raise
-        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo'))
-        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag'))
-        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag'))
-        self.assertRaises(ValueError, TsfKNN, Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag'))
+        self.assertRaises(ValueError, TsfKNN,
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo'))
+        self.assertRaises(ValueError, TsfKNN,
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag'))
+        self.assertRaises(ValueError, TsfKNN,
+                          Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag'))
+        self.assertRaises(ValueError, TsfKNN,
+                          Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag'))

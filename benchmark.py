@@ -42,6 +42,8 @@ def get_args():
     parser.add_argument('--num_hashes', type=int, default=16, help='num of hashes for lsh method used in TsfKNN')
     parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
 
+    parser.add_argument('--individual', action='store_true', default=False)
+
     # transform define
     parser.add_argument('--transform', type=str, default='IdentityTransform')
 
@@ -70,12 +72,13 @@ ALL_TRANSFORM = (
 )
 
 ALL_MODEL = (
-    'ZeroForecast',
-    'MeanForecast',
+    # 'ZeroForecast',
+    # 'MeanForecast',
     'LinearRegression',
-    'ExponentialSmoothing',
+    # 'ExponentialSmoothing',
     # 'TsfKNN',
     'DLinear',
+    'DLinearClosedForm',
 )
 
 if __name__ == '__main__':

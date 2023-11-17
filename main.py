@@ -1,4 +1,4 @@
-from src.models.DLinear import DLinear
+from src.models.DLinear import DLinear, DLinearClosedForm
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.utils.transforms import IdentityTransform, NormalizationTransform, StandardizationTransform, \
@@ -56,6 +56,7 @@ def get_model(args):
         'ExponentialSmoothing': ExponentialSmoothing,
         'TsfKNN':               TsfKNN,
         'DLinear':              DLinear,
+        'DLinearClosedForm':    DLinearClosedForm,
     }
     return model_dict[args.model](args)
 
