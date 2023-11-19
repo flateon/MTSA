@@ -4,14 +4,14 @@ from numpy.lib.stride_tricks import sliding_window_view
 from src.models.base import MLForecastModel
 from src.models.baselines import LinearRegression
 
-from src.utils.decomposition import moving_average
+from src.utils.decomposition import get_decomposition
 
 
 class DLinearClosedForm(MLForecastModel):
     def __init__(self, args) -> None:
         super().__init__()
-        self.model_trend = LinearRegression()
-        self.model_seasonal = LinearRegression()
+        self.decomposition, self.n_components = get_decomposition(args.decomposition)
+        self.models = [LinearRegression() for _ in range(self.n_components)]
         self.individual = args.individual
 
     def _fit(self, X: np.ndarray, args) -> None:
@@ -34,20 +34,19 @@ class DLinearClosedForm(MLForecastModel):
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
         x_windowed, y_windowed = np.split(train_data, [seq_len], axis=1)
 
-        x_t, x_s = moving_average(x_windowed)
-        y_t, y_s = moving_average(y_windowed)
-
-        self.model_trend.calc_weight(x_t, y_t)
-        self.model_seasonal.calc_weight(x_s, y_s)
+        x_decomposed = self.decomposition(x_windowed)
+        y_decomposed = self.decomposition(y_windowed)
+        for x, y, model in zip(x_decomposed, y_decomposed, self.models):
+            model.calc_weight(x, y)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
         n_samples, seq_len, n_channels = X.shape
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, seq_len, 1)
 
-        trend, seasonal = moving_average(X)
+        decomposed = self.decomposition(X)
 
-        pred = self.model_trend.forecast(trend, pred_len) + self.model_seasonal.forecast(seasonal, pred_len)
+        pred = sum((model.forecast(x, pred_len) for model, x in zip(self.models, decomposed)))
 
         if not self.individual:
             pred = pred.reshape(n_samples, n_channels, pred_len).transpose((0, 2, 1))
@@ -69,6 +68,7 @@ class DLinear(MLForecastModel):
         super().__init__()
         self.model = None
         self.individual = args.individual
+        self.decomposition, self.n_components = get_decomposition(args.decomposition)
 
     def _fit(self, X: np.ndarray, args) -> None:
         n_samples, train_len, n_channels = X.shape
@@ -82,14 +82,13 @@ class DLinear(MLForecastModel):
 
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
         x_windowed, y_windowed = np.split(train_data, [seq_len], axis=1)
-        x_trend, x_seasonal = moving_average(x_windowed)
 
-        x_trend = torch.tensor(x_trend, dtype=torch.float32)
-        x_seasonal = torch.tensor(x_seasonal, dtype=torch.float32)
+        x_decomposed = self.decomposition(x_windowed)
+        x_decomposed = (torch.tensor(x, dtype=torch.float32) for x in x_decomposed)
         y = torch.tensor(y_windowed, dtype=torch.float32)
 
-        self.model = DLinearModel(seq_len, pred_len, n_channels)
-        train_loader = DataLoader(TensorDataset(x_trend, x_seasonal, y), batch_size=32, shuffle=True)
+        self.model = DLinearModel(seq_len, pred_len, n_channels, self.n_components)
+        train_loader = DataLoader(TensorDataset(*x_decomposed, y), batch_size=32, shuffle=True)
         trainer = L.Trainer(max_epochs=10)
         trainer.fit(self.model, train_loader)
 
@@ -98,11 +97,10 @@ class DLinear(MLForecastModel):
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, seq_len, 1)
 
-        x_trend, x_seasonal = moving_average(X)
-        x_trend = torch.tensor(x_trend, dtype=torch.float32)
-        x_seasonal = torch.tensor(x_seasonal, dtype=torch.float32)
+        x_decomposed = self.decomposition(X)
         with torch.no_grad():
-            pred = self.model(x_trend, x_seasonal).numpy()
+            x_decomposed = tuple(torch.tensor(x, dtype=torch.float32) for x in x_decomposed)
+            pred = self.model(x_decomposed).numpy()
 
         if not self.individual:
             pred = pred.reshape(n_samples, n_channels, pred_len).transpose((0, 2, 1))
@@ -110,30 +108,30 @@ class DLinear(MLForecastModel):
 
 
 class DLinearModel(L.LightningModule):
-    def __init__(self, seq_len, pred_len, n_channel):
+    def __init__(self, seq_len, pred_len, n_channel, n_components):
         super().__init__()
         self.n_channel = n_channel
         self.seq_len = seq_len
         self.pred_len = pred_len
-        self.trend = nn.ModuleList([nn.Linear(seq_len, pred_len) for _ in range(n_channel)])
-        self.seasonal = nn.ModuleList([nn.Linear(seq_len, pred_len) for _ in range(n_channel)])
+        self.models = nn.ModuleList(
+            nn.ModuleList(nn.Linear(seq_len, pred_len) for _ in range(n_channel)) for _ in range(n_components))
 
-    def forward(self, x_trend, x_seasonal):
+    def forward(self, x_decomposed):
         """
-        :param x_trend: shape=(batch_size, seq_len, channels)
-        :param x_seasonal: shape=(batch_size, seq_len, channels)
+        :param x_decomposed: list of tensor,each tensor has the same shape=(batch_size, seq_len, channels)
         :return: shape=(batch_size, pred_len, channels)
         """
-        batch_size, _, _ = x_trend.shape
+        batch_size, _, _ = x_decomposed[0].shape
 
-        output = torch.empty((batch_size, self.pred_len, self.n_channel), device=x_trend.device)
+        output = torch.empty((batch_size, self.pred_len, self.n_channel), device=x_decomposed[0].device)
         for i in range(self.n_channel):
-            output[..., i] = self.trend[i](x_trend[..., i]) + self.seasonal[i](x_seasonal[..., i])
+            output[..., i] = sum((model[i](x[..., i]) for model, x in zip(self.models, x_decomposed)))
         return output
 
     def training_step(self, batch, batch_idx):
-        x_t, x_s, y = batch
-        pred = self.forward(x_t, x_s)
+        x_decomposed = batch[:-1]
+        y = batch[-1]
+        pred = self.forward(x_decomposed)
         loss = nn.functional.mse_loss(pred, y)
         self.log("train_loss", loss)
         return loss

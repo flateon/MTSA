@@ -9,42 +9,38 @@ from trainer import MLTrainer
 import pandas as pd
 from main import get_args
 
-ALL_DISTANCE = (
-    'euclidean',
-    'manhattan',
-    'chebyshev',
-    # # 'minkowski',
-    'cosine',
-    'decompose',
-    # 'zero',
+ALL_MODEL = (
+    # 'ZeroForecast',
+    # 'MeanForecast',
+    # 'LinearRegression',
+    # 'ExponentialSmoothing',
+    'TsfKNN',
+    'DLinear',
+    'DLinearClosedForm',
 )
 
-ALL_EMBEDDING = (
-    ('lag', 1),
-    ('lag', 2),
-    ('lag', 3),
-    ('lag', 4),
-    ('fourier', None),
+ALL_DECOMPOSITION = (
+    'moving_average',
+    'differential',
+    'classic'
 )
 
 if __name__ == '__main__':
     args = get_args()
-    print(" | Embedding | Distance | mse | mae | mape | smape | mase |")
+    print(" | Model | Decomposition | mse | mae | mape | smape | mase |")
     results = []
 
     dataset = get_dataset(args)
 
-    for embedding, tau in ALL_EMBEDDING:
-        args.embedding = embedding
-        args.tau = tau
-        embedding = f'{embedding}(tau={tau})' if embedding == 'lag' else embedding
-
-        for distance in ALL_DISTANCE:
+    for model_name in ALL_MODEL:
+        for decomposition in ALL_DECOMPOSITION:
             fix_seed = 2023
             random.seed(fix_seed)
             np.random.seed(fix_seed)
 
-            args.distance = distance
+            args.model = model_name
+            args.decomposition = decomposition
+            args.distance = 'decompose'
 
             # create model
             model = get_model(args)
@@ -58,14 +54,14 @@ if __name__ == '__main__':
             mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len,
                                                            pred_len=args.pred_len)
             print(
-                f"| {embedding:12}| {distance:10} | {mse:5.4g} | {mae:5.4g} | {mape:5.4g} | {smape:5.4g} | {mase:5.4g} |")
+                f"| {model_name:20}| {decomposition:20} | {mse:5.4g} | {mae:5.4g} | {mape:5.4g} | {smape:5.4g} | {mase:5.4g} |")
             results.append(
-                [embedding, distance, mse, mae, mape, smape, mase])
+                [model_name, decomposition, mse, mae, mape, smape, mase])
 
     # Create a Pandas DataFrame from the results list
     results_df = pd.DataFrame(results,
-                              columns=["Embedding", "distance", "mse", "mae", "mape", "smape",
-                                       "mase"])
+                              columns=["Model", "Decomposition", "MSE", "MAE", "MAPE", "SMAPE",
+                                       "MASE"])
 
     # Save the DataFrame to a CSV file
     results_df.to_csv("model_metrics_knn.csv", index=False)

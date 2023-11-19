@@ -23,7 +23,7 @@ class TsfKNN(MLForecastModel):
         elif args.distance == 'cosine':
             self.distance = cosine
         elif args.distance == 'decompose':
-            self.distance = DecomposeDistance(distance=chebyshev)
+            self.distance = DecomposeDistance(distance=chebyshev, decomposition=args.decomposition)
         elif args.distance == 'zero':
             self.distance = zero
         else:

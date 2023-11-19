@@ -48,11 +48,12 @@ class TestModels(unittest.TestCase):
 
     def test_d_linear(self):
         for individual in (True, False):
-            model = DLinear(Args(individual=individual))
-            model.fit(self.X, self.args)
-            forecast = model.forecast(self.X_test, self.pred_len)
+            for decomposition in ('moving_average', 'differential', 'classic'):
+                model = DLinear(Args(individual=individual, decomposition=decomposition))
+                model.fit(self.X, self.args)
+                forecast = model.forecast(self.X_test, self.pred_len)
 
-            self.assertEqual(forecast.shape, self.fore_shape)
+                self.assertEqual(forecast.shape, self.fore_shape)
 
     def test_exponential_smoothing(self):
         model = ExponentialSmoothing(Args(ew=0.5))
@@ -74,17 +75,20 @@ class TestModels(unittest.TestCase):
             for e in ('lag', 'fourier'):
                 for k in ('brute_force', 'lsh'):
                     for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
-                        args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2, embedding=e)
-                        model = TsfKNN(args)
-                        model.fit(self.X, args)
-                        forecast = model.forecast(self.X_test, self.pred_len)
+                        if d == 'decompose':
+                            for decomposition in ('moving_average', 'differential', 'classic'):
+                                args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2,
+                                            embedding=e, decomposition=decomposition, tau=1)
+                                model = TsfKNN(args)
+                                model.fit(self.X, args)
+                                forecast = model.forecast(self.X_test, self.pred_len)
 
-                        self.assertEqual(forecast.shape, self.fore_shape)
+                                self.assertEqual(forecast.shape, self.fore_shape)
                         # TODO add value assert
 
         # lsh test if the number of candidates is less than k
         args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2,
-                    embedding='lag')
+                    embedding='lag', tau=1)
         model = TsfKNN(args)
         model.fit(self.X, args)
         forecast = model.forecast(self.X_test, self.pred_len)
@@ -97,10 +101,10 @@ class TestModels(unittest.TestCase):
 
         # test raise
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo'))
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo', tau=1))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag'))
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag', tau=1))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag'))
+                          Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag', tau=1))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag'))
+                          Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag', tau=1))

@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.utils.decomposition import moving_average
+from src.utils.decomposition import get_decomposition
 
 
 def euclidean(a, b):
@@ -44,9 +44,10 @@ def zero(a, b):
 
 
 class DecomposeDistance:
-    def __init__(self, period=24, weight=(0.5, 0.5), distance=euclidean):
+    def __init__(self, period=24, weight=None, decomposition='moving_average', distance=chebyshev):
         self.period = period
-        self.weight = weight
+        self.decompose, n_components = get_decomposition(decomposition)
+        self.weight = weight if weight is not None else np.ones(n_components) / n_components
         self.distance = distance
         self.b_decomposed = None
         self.b_id = None
@@ -58,14 +59,14 @@ class DecomposeDistance:
         :return: (n,)
         """
         a = a.reshape(a.shape[0], a.shape[1], -1)
-        a_t, a_s = moving_average(a, self.period)
+        a_decomposed = self.decompose(a, self.period)
         if self.b_decomposed is None or self.b_id != id(b):
             self.b_id = id(b)
-            b = b.reshape(b.shape[0], b.shape[1], -1)
-            self.b_decomposed = moving_average(b, self.period)
+            self.b_decomposed = self.decompose(b.reshape(b.shape[0], b.shape[1], -1), self.period)
 
-        b_t, b_s = self.b_decomposed
-
-        return self.weight[0] * self.distance(a_t, b_t) + self.weight[1] * self.distance(a_s, b_s)
-        # return self.distance(a_t, b_t)
-        # return self.distance(a_s, b_s)
+        if self.weight is None:
+            self.weight = np.ones(len(a_decomposed)) / len(a_decomposed)
+        distance = 0
+        for a_d, b_d, w in zip(a_decomposed, self.b_decomposed, self.weight):
+            distance += self.distance(a_d, b_d) * w
+        return distance
