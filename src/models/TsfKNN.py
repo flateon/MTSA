@@ -38,6 +38,8 @@ class TsfKNN(MLForecastModel):
 
         if args.embedding in ('lag', 'fourier'):
             self.embedding = args.embedding
+            if self.embedding == 'lag':
+                self.tau = args.tau
         else:
             raise ValueError(f'Unknown embedding {args.embedding}')
 
@@ -88,6 +90,9 @@ class TsfKNN(MLForecastModel):
         if self.embedding == 'fourier':
             x_train = np.fft.rfftn(x_train, axes=(1,))
             X = np.fft.rfftn(X, axes=(1,))
+        elif self.embedding == 'lag':
+            x_train = x_train[:, ::-self.tau][:, ::-1]
+            X = X[:, ::-self.tau][:, ::-1]
         self.knn.insert(x_train)
 
         for x in tqdm(X, leave=False):

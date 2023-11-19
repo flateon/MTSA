@@ -36,6 +36,7 @@ def get_args():
                                                                  '[MIMO, recursive]')
     parser.add_argument('--embedding', type=str, default='fourier', help='embedding method used in TsfKNN, options: '
                                                                      '[lag, fourier]')
+    parser.add_argument('--tau', type=int, default=1, help='tau for lag embedding method used in TsfKNN')
     parser.add_argument('--knn', type=str, default='lsh', help='knn method used in TsfKNN, options: '
                                                                '[brute_force, lsh]')
     parser.add_argument('--num_bits', type=int, default=8, help='num of bits for lsh method used in TsfKNN')
@@ -45,7 +46,7 @@ def get_args():
     parser.add_argument('--individual', action='store_true', default=False)
 
     # transform define
-    parser.add_argument('--transform', type=str, default='IdentityTransform')
+    parser.add_argument('--transform', type=str, default='StandardizationTransform')
 
     args = parser.parse_args()
     return args
