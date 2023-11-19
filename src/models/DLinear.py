@@ -90,7 +90,7 @@ class DLinear(MLForecastModel):
 
         self.model = DLinearModel(seq_len, pred_len, n_channels)
         train_loader = DataLoader(TensorDataset(x_trend, x_seasonal, y), batch_size=32, shuffle=True)
-        trainer = L.Trainer(max_epochs=5, accelerator='cpu', enable_progress_bar=False)
+        trainer = L.Trainer(max_epochs=10)
         trainer.fit(self.model, train_loader)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -126,7 +126,7 @@ class DLinearModel(L.LightningModule):
         """
         batch_size, _, _ = x_trend.shape
 
-        output = torch.empty((batch_size, self.pred_len, self.n_channel))
+        output = torch.empty((batch_size, self.pred_len, self.n_channel), device=x_trend.device)
         for i in range(self.n_channel):
             output[..., i] = self.trend[i](x_trend[..., i]) + self.seasonal[i](x_seasonal[..., i])
         return output
@@ -135,7 +135,6 @@ class DLinearModel(L.LightningModule):
         x_t, x_s, y = batch
         pred = self.forward(x_t, x_s)
         loss = nn.functional.mse_loss(pred, y)
-        # Logging to TensorBoard (if installed) by default
         self.log("train_loss", loss)
         return loss
 
