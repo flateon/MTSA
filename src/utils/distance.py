@@ -64,9 +64,5 @@ class DecomposeDistance:
             self.b_id = id(b)
             self.b_decomposed = self.decompose(b.reshape(b.shape[0], b.shape[1], -1), self.period)
 
-        if self.weight is None:
-            self.weight = np.ones(len(a_decomposed)) / len(a_decomposed)
-        distance = 0
-        for a_d, b_d, w in zip(a_decomposed, self.b_decomposed, self.weight):
-            distance += self.distance(a_d, b_d) * w
-        return distance
+        dist = sum((self.distance(a_d, b_d) * w for a_d, b_d, w in zip(a_decomposed, self.b_decomposed, self.weight)))
+        return dist

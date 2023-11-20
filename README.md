@@ -78,12 +78,40 @@ python benchmark_reimplement.py
 
 The reported results will be store in *./results/test_\*.csv*
 
-### Unittest
+### Unittest and coverage report
 
 To test our implementation, run the unittest with the following command:
 
 ```bash
-python -m unittest
+coverage run -m unittest; coverage report -m
+```
+Here is testing result and the coverage report:
+```
+Ran 42 tests in 69.736s
+
+OK
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+src/dataset/data_visualizer.py      48      0   100%
+src/dataset/dataset.py              89      0   100%
+src/models/DLinear.py               98      0   100%
+src/models/TsfKNN.py               130      0   100%
+src/models/base.py                  16      0   100%
+src/models/baselines.py             54      0   100%
+src/utils/decomposition.py          28      0   100%
+src/utils/distance.py               41      0   100%
+src/utils/metrics.py                16      0   100%
+src/utils/transforms.py             85      0   100%
+tests/__init__.py                    0      0   100%
+tests/test_dataset.py               90      0   100%
+tests/test_decomposition.py         35      0   100%
+tests/test_distance.py              38      0   100%
+tests/test_metrics.py               35      0   100%
+tests/test_models.py                84      0   100%
+tests/test_transforms.py            94      0   100%
+tests/test_visualizer.py            33      0   100%
+--------------------------------------------------------------
+TOTAL                             1014      0   100%
 ```
 
 ## Roadmap
@@ -107,6 +135,8 @@ All datasets can be found [here](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/)
 - [x] TsfKNN
 - [x] LinearRegression
 - [x] ExponentialSmoothing
+- [x] DLinear
+- [x] DLinearClosedForm
 
 ### Transformations
 

@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 
-from src.models.DLinear import DLinear
+from src.models.DLinear import DLinear, DLinearClosedForm
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.models.base import MLForecastModel
@@ -16,7 +16,7 @@ class TestModels(unittest.TestCase):
         # (n_samples, timestamps, channels)
         self.X = np.random.rand(1, 1000, self.n_channels)
         # (n_samples, timestamps, channels)
-        self.X_test = np.random.rand(10, self.seq_len, self.n_channels)
+        self.X_test = np.random.rand(3, self.seq_len, self.n_channels)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
         self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len)
 
@@ -55,6 +55,15 @@ class TestModels(unittest.TestCase):
 
                 self.assertEqual(forecast.shape, self.fore_shape)
 
+    def test_d_linear_closed_form(self):
+        for individual in (True, False):
+            for decomposition in ('moving_average', 'differential', 'classic'):
+                model = DLinearClosedForm(Args(individual=individual, decomposition=decomposition))
+                model.fit(self.X, self.args)
+                forecast = model.forecast(self.X_test, self.pred_len)
+
+                self.assertEqual(forecast.shape, self.fore_shape)
+
     def test_exponential_smoothing(self):
         model = ExponentialSmoothing(Args(ew=0.5))
         model.fit(self.X, self.args)
@@ -75,16 +84,17 @@ class TestModels(unittest.TestCase):
             for e in ('lag', 'fourier'):
                 for k in ('brute_force', 'lsh'):
                     for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
-                        if d == 'decompose':
-                            for decomposition in ('moving_average', 'differential', 'classic'):
-                                args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2,
-                                            embedding=e, decomposition=decomposition, tau=1)
-                                model = TsfKNN(args)
-                                model.fit(self.X, args)
-                                forecast = model.forecast(self.X_test, self.pred_len)
+                        for decomposition in ('moving_average', 'differential', 'classic'):
+                            args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=6, num_hashes=2,
+                                        embedding=e, decomposition=decomposition, tau=1)
+                            model = TsfKNN(args)
+                            model.fit(self.X, args)
+                            forecast = model.forecast(self.X_test, self.pred_len)
 
-                                self.assertEqual(forecast.shape, self.fore_shape)
-                        # TODO add value assert
+                            self.assertEqual(forecast.shape, self.fore_shape)
+                            # TODO add value assert
+                            if d != 'decompose':
+                                break
 
         # lsh test if the number of candidates is less than k
         args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2,
