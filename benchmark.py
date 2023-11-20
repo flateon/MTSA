@@ -1,4 +1,3 @@
-import argparse
 import random
 
 import numpy as np
@@ -78,4 +77,4 @@ if __name__ == '__main__':
     results_df = pd.DataFrame(results, columns=["dataset", "model", "transform", "mse", "mae", "mape", "smape", "mase"])
 
     # Save the DataFrame to a CSV file
-    results_df.to_csv("test_model.csv", index=False)
+    results_df.to_csv("results/test_model.csv", index=False)

@@ -1,4 +1,3 @@
-import argparse
 import random
 
 import numpy as np
@@ -64,5 +63,5 @@ if __name__ == '__main__':
                                        "MASE"])
 
     # Save the DataFrame to a CSV file
-    results_df.to_csv("test_decompose.csv", index=False)
-    results_df.to_csv("test_decompose_3g.csv", index=False, float_format='%.3g')
+    results_df.to_csv("results/test_decompose.csv", index=False)
+    results_df.to_csv("results/test_decompose_3g.csv", index=False, float_format='%.3g')

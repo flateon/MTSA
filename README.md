@@ -1,114 +1,134 @@
-# Homework 2
+# Modern Time Series Analysis
 
-Homework 2 considers multivariate time series (multi input multi output). The dataset used here is `ETTh1`.
+MTSA (Modern Time Series Analysis) is a library dedicated to the field of time series forecasting. Our primary objective
+is to provide a comprehensive collection of both classical and deep learning-based algorithms for tackling time series
+forecasting tasks.
+
+We will gradually enhance and expand our library as the TSA (Time Series Analysis) course progresses.
+
+[TSA home page](https://www.lamda.nju.edu.cn/yehj/TSA2023/)
+
+## Getting Started
+
+To get started with MTSA, follow these steps:
+
+### Prerequisites
+
+Git clone our repository, creating a conda environment and activate it via the following command
+
+```bash
+cd MTSA
+conda env create -f environment.yml
+conda activate MTSA-torch
+```
+
+### Download Datasets
+
+Download the datasets from [nju box](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/) and organize them as follows:
+
+```
+MTSA
+└── dataset
+    ├── electricity
+    │   └── electricity.csv
+    ├── ETT
+    │   ├── ETTh1.csv
+    │   ├── ETTh2.csv
+    │   ├── ETTm1.csv
+    │   └── ETTm2.csv
+    ├── exchange_rate
+    │   └── exchange_rate.csv
+    ├── illness
+    │   └── national_illness.csv
+    ├── m4
+    │   ├── Daily-test.csv
+    │   ├── Daily-train.csv
+    │   ├── Hourly-test.csv
+    │   ├── Hourly-train.csv
+    │   ├── M4-info.csv
+    │   ├── Monthly-test.csv
+    │   ├── Monthly-train.csv
+    │   ├── Quarterly-test.csv
+    │   ├── Quarterly-train.csv
+    │   ├── submission-Naive2.csv
+    │   ├── test.npz
+    │   ├── training.npz
+    │   ├── Weekly-test.csv
+    │   ├── Weekly-train.csv
+    │   ├── Yearly-test.csv
+    │   └── Yearly-train.csv
+    ├── traffic
+    │   └── traffic.csv
+    └── weather
+        └── weather.csv
+
+```
+
 ## Usage examples
 
+### Main Results
+
+To reproduce the reported results, run the following command:
+
+```bash
+python benchmark_knn.py
+python benchmark_decomposition.py
+python benchmark_reimplement.py
 ```
-python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model MeanForecast
+
+The reported results will be store in *./results/test_\*.csv*
+
+### Unittest
+
+To test our implementation, run the unittest with the following command:
+
+```bash
+python -m unittest
 ```
 
-```
-python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model TsfKNN --n_neighbors 1 --msas MIMO --distance euclidean
-```
+## Roadmap
 
-## Part 1 Update Existing Transformation Class (10 pts)
-path: `src/utils/transforms.py`
+### Datasets
 
-**Objective:** Modify the `Standardization` transformation class to handle multivariate data.
+All datasets can be found [here](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/).
 
+- [x] M4
+- [x] ETT
+- [x] Traffic
+- [x] Electricity
+- [x] Exchange-Rate
+- [x] Weather
+- [x] ILI(illness)
 
-## Part 2 TsfKNN (40 pts)
+### Models
 
-path: `src/models/TsfKNN.py`
+- [x] ZeroForecast
+- [x] MeanForecast
+- [x] TsfKNN
+- [x] LinearRegression
+- [x] ExponentialSmoothing
 
-**Objective:**
-Refine the TsfKNN model to improve its forecasting ability for multivariate time series. This involves implementing a robust distance metric for multivariate data and designing an effective temporal embedding strategy.
+### Transformations
 
-**Instructions:**
+- [x] IdentityTransform
+- [x] Normalization
+- [x] Standardization
+- [x] Mean Normalization
+- [x] Box-Cox
+- [x] YeoJohnsonTransform
 
-**1. Multivariate Distance Metrics**
+### Metrics
 
-Implement additional distance metrics to handle multivariate sequences.
-Make sure the distance function can compare two multivariate time series and return a scalar distance value.
+- [x] MSE
+- [x] MAE
+- [x] MASE
+- [x] MAPE
+- [x] SMAPE
 
-**2. Temporal Embedding Concepts**
+### Distance
 
-Learn about temporal embeddings and how they can encapsulate the temporal information within a time series.
-Explore different embedding techniques such as Fourier transforms, autoencoder representations, or other methods. 
-Note that lag-based embeddings are already implemented in the `TsfKNN` model. You can modify the time lag parameter tau and dimension m as described in PPT to improve the performance.
-
-## Part 3 DLinear (30 pts)
-
-path: `src/models/DLinear.py`
-
-**Objective:** 
-Implement the DLinear model as described in the provided [paper](https://arxiv.org/pdf/2205.13504.pdf).
-You can define the dataloader yourself or modify `trainer.py` if necessary.
-
-## Part 4 Decomposition (20 pts)
-
-path: `src/utils/decomposition.py`
-
-**Objective:**
-Implement time series decomposition methods to separate the trend and seasonal components from the original time series data and integrate these methods into the TsfKNN and DLinear forecasting models.
-
-**Instructions:**
-
-**1. Moving Average Decomposition**
-
-Implement the moving_average function that calculates the trend and seasonal components using a moving average with a specified seasonal period.
-
-**2. Differential Decomposition**
-
-Implement the differential_decomposition function that separates the trend and seasonal components by differencing the time series data.
-Determine how to calculate the differences and reconstruct the trend and seasonal components from these differences.
-
-**3. Other Decomposition Method (bonus 10 pts)**
-
-Explore other decomposition methods as you like.
-
-## Part 5 Evaluation
-
-**Instructions:**
-
-**1. Exploring Temporal Embedding and Distance Combinations in TsfKNN**
-
-  In your report, write down the details of your method and fill the table below.
-
- | Temporal Embedding | Distance  | MSE  | MAE  |
- |--------------------|-----------| ----- | ----- |
-| lag-based (lag=96) | euclidean      |      |      |
- |                    | ...       |      |      |
-
-**2. Decomposition Method Evaluation for TsfKNN and DLinear**
-
-Transform the data by Standardization and apply different decomposition methods.
-In your report, write down the details of your method and fill the table below.
-    
-| Model  | Decomposition | MSE  | MAE  |
- |--------|---------------| ----- | ----- |
-| TsfKNN | MA            |      |      |
- |        | ...           |      |      |
-
-
-
-## Submission
-
-**1. Modified Code:**
-
-- Provide the modified code for all components of the task.
-- Include a `README.md` file in Markdown format that covers the entire task. This file should contain:
-  - how to install any necessary dependencies for the entire task.
-  - how to run the code and scripts to reproduce the reported results.
-  - datasets used for testing in all parts of the task.
-
-**2. PDF Report:**
-
-- Create a detailed PDF report that encompasses the entire task. The report should include sections for each component of the task.
-
-**3. Submission Format:**
-
-- Submit the entire task, including all code and scripts, along with the `README.md` file and the PDF report, in a compressed archive (.zip).
-
-**4. Submission Deadline:**
-  2023-11-21 23:55
+- [x] euclidean
+- [x] manhattan
+- [x] chebyshev
+- [x] minkowski
+- [x] cosine

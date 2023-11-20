@@ -1,4 +1,3 @@
-import argparse
 import random
 import time
 
@@ -54,5 +53,5 @@ if __name__ == '__main__':
                               columns=["num_bits", "num_hashes", "n_neighbors", "time", "mse", "mae", "mape",
                                        "smape", "mase"])
 
-    results_df.to_csv("test_lsh.csv", index=False)
-    results_df.to_csv("test_lsh_3g.csv", index=False, float_format='%.3g')
+    results_df.to_csv("results/test_lsh.csv", index=False)
+    results_df.to_csv("results/test_lsh_3g.csv", index=False, float_format='%.3g')
