@@ -25,3 +25,7 @@ def smape(predict, target):
 def mase(predict, target, m: int = 24):
     mase_ = np.mean(np.abs(target - predict)) / np.mean(np.abs(target[m:] - target[:-m]))
     return np.nan_to_num(mase_, copy=False, nan=0, posinf=0.0, neginf=0.0)
+
+
+def metrics(pred, target, m: int = 24):
+    return mse(pred, target), mae(pred, target), mape(pred, target), smape(pred, target), mase(pred, target, m=m)

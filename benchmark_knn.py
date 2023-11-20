@@ -68,5 +68,5 @@ if __name__ == '__main__':
                                        "mase"])
 
     # Save the DataFrame to a CSV file
-    results_df.to_csv("model_metrics_knn.csv", index=False)
-    results_df.to_csv("model_metrics_knn_3g.csv", index=False, float_format='%.3g')
+    results_df.to_csv("test_knn.csv", index=False)
+    results_df.to_csv("test_knn_3g.csv", index=False, float_format='%.3g')
