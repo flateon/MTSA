@@ -1,164 +1,96 @@
-# Modern Time Series Analysis
+# Homework 3
 
-MTSA (Modern Time Series Analysis) is a library dedicated to the field of time series forecasting. Our primary objective
-is to provide a comprehensive collection of both classical and deep learning-based algorithms for tackling time series
-forecasting tasks.
-
-We will gradually enhance and expand our library as the TSA (Time Series Analysis) course progresses.
-
-[TSA home page](https://www.lamda.nju.edu.cn/yehj/TSA2023/)
-
-## Getting Started
-
-To get started with MTSA, follow these steps:
-
-### Prerequisites
-
-Git clone our repository, creating a conda environment and activate it via the following command
-
-```bash
-cd MTSA
-conda env create -f environment.yml
-conda activate MTSA-torch
-```
-
-### Download Datasets
-
-Download the datasets from [nju box](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/) and organize them as follows:
-
-```
-MTSA
-└── dataset
-    ├── electricity
-    │   └── electricity.csv
-    ├── ETT
-    │   ├── ETTh1.csv
-    │   ├── ETTh2.csv
-    │   ├── ETTm1.csv
-    │   └── ETTm2.csv
-    ├── exchange_rate
-    │   └── exchange_rate.csv
-    ├── illness
-    │   └── national_illness.csv
-    ├── m4
-    │   ├── Daily-test.csv
-    │   ├── Daily-train.csv
-    │   ├── Hourly-test.csv
-    │   ├── Hourly-train.csv
-    │   ├── M4-info.csv
-    │   ├── Monthly-test.csv
-    │   ├── Monthly-train.csv
-    │   ├── Quarterly-test.csv
-    │   ├── Quarterly-train.csv
-    │   ├── submission-Naive2.csv
-    │   ├── test.npz
-    │   ├── training.npz
-    │   ├── Weekly-test.csv
-    │   ├── Weekly-train.csv
-    │   ├── Yearly-test.csv
-    │   └── Yearly-train.csv
-    ├── traffic
-    │   └── traffic.csv
-    └── weather
-        └── weather.csv
-
-```
-
+Homework 3 considers multivariate time series (multi input multi output). The datasets used here are `ETTh1`, `ETTh2`, `ETTm1`, `ETTm2`, `Electricity`, `Traffic`, `Weather`, `Exchange`, `ILI`.
 ## Usage examples
 
-### Main Results
-
-To reproduce the reported results, run the following command:
-
-```bash
-python benchmark_knn.py
-python benchmark_decomposition.py
-python benchmark_reimplement.py
+```
+python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model MeanForecast
 ```
 
-The reported results will be store in *./results/test_\*.csv*
-
-### Unittest and coverage report
-
-To test our implementation, run the unittest with the following command:
-
-```bash
-coverage run -m unittest; coverage report -m
 ```
-Here is testing result and the coverage report:
-```
-Ran 42 tests in 69.736s
-
-OK
-Name                             Stmts   Miss  Cover   Missing
---------------------------------------------------------------
-src/dataset/data_visualizer.py      48      0   100%
-src/dataset/dataset.py              89      0   100%
-src/models/DLinear.py               98      0   100%
-src/models/TsfKNN.py               130      0   100%
-src/models/base.py                  16      0   100%
-src/models/baselines.py             54      0   100%
-src/utils/decomposition.py          28      0   100%
-src/utils/distance.py               41      0   100%
-src/utils/metrics.py                16      0   100%
-src/utils/transforms.py             85      0   100%
-tests/__init__.py                    0      0   100%
-tests/test_dataset.py               90      0   100%
-tests/test_decomposition.py         35      0   100%
-tests/test_distance.py              38      0   100%
-tests/test_metrics.py               35      0   100%
-tests/test_models.py                84      0   100%
-tests/test_transforms.py            94      0   100%
-tests/test_visualizer.py            33      0   100%
---------------------------------------------------------------
-TOTAL                             1014      0   100%
+python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model TsfKNN --n_neighbors 1 --msas MIMO --distance euclidean
 ```
 
-## Roadmap
+## Part 1 Decomposition (20 pts)
+path: `src/utils/decomposition.py`
 
-### Datasets
+**Objective:** Implement STL and X11 decomposition methods to separate the trend and seasonal components from the original time series data.
 
-All datasets can be found [here](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/).
 
-- [x] M4
-- [x] ETT
-- [x] Traffic
-- [x] Electricity
-- [x] Exchange-Rate
-- [x] Weather
-- [x] ILI(illness)
+## Part 2 Model (20 pts)
 
-### Models
+path: `src/models/ARIMA.py`
+path: `src/models/ThetaMethod.py`
 
-- [x] ZeroForecast
-- [x] MeanForecast
-- [x] TsfKNN
-- [x] LinearRegression
-- [x] ExponentialSmoothing
-- [x] DLinear
-- [x] DLinearClosedForm
+**Objective:** Implement the ARIMA and Theta forecasting models.
 
-### Transformations
+## Part 3 ResidualModel (60 pts)
 
-- [x] IdentityTransform
-- [x] Normalization
-- [x] Standardization
-- [x] Mean Normalization
-- [x] Box-Cox
-- [x] YeoJohnsonTransform
+path: `src/models/ResidualModel.py`
 
-### Metrics
+**Objective:**
+The objective is to create an ensemble forecasting model that integrates various individual 
+models you've implemented earlier, such as LR, ETS, DLinear, TSFKNN, ARIMA, and ThetaMethod. 
+The aim is to leverage the strengths of each model for improved forecasting accuracy.
 
-- [x] MSE
-- [x] MAE
-- [x] MASE
-- [x] MAPE
-- [x] SMAPE
+**Instructions:**
 
-### Distance
+**1. Decomposition-Based Forecasting:**
 
-- [x] euclidean
-- [x] manhattan
-- [x] chebyshev
-- [x] minkowski
-- [x] cosine
+Implement time series decomposition to separate trend and seasonal components from the original data.
+Apply different forecasting models to predict the trend and seasonal components independently.
+Combine these predictions to form a comprehensive forecast.
+
+**2. Residual Network Approach:**
+
+Employ a residual network strategy, inspired by [N-Beats](https://arxiv.org/pdf/1905.10437.pdf), which uses multiple MLPs, and each MLP in the network aims to predict the residuals (errors) of the preceding MLP.
+For example, the residual from a TSFKNN prediction could be modeled using DLinear.
+The final forecast is the cumulative sum of predictions from all models.
+
+**3. Diverse Prediction Methods:**
+
+Experiment with various forecasting methods, such as recursive, non-recursive, direct, and indirect approaches.
+
+**4. Combining Methods for Enhanced Accuracy:**
+
+You can combine the above methods to get a better result, not necessary to use all of them.
+
+
+## Part 4 Evaluation
+
+**Instructions:**
+
+**1. Apply your ResidualModels to the datasets specified at the start of this project:**
+
+Tips: You can choose the best model on one dateset and use it to predict the other datasets.
+
+The experimental settings used here are the same as [TimesNet](https://arxiv.org/abs/2210.02186). You can easily compare your model with past SOTA models.
+If your model is better than SOTA, you can get 15 pts extra.
+
+| Dataset | pred_len | Models | Decomposition | MSE  | MAE  |
+ |---------|----------|--------|------------| ----- | ----- |
+| ETTh1   | 96       | TsfKNN | MA     |      |      |
+ | ...     |          |        |      |      |      |
+
+ 
+
+## Submission
+
+**1. Modified Code:**
+
+- Provide the modified code for all components of the task.
+- Include a `README.md` file in Markdown format that covers the entire task. This file should contain:
+  - how to install any necessary dependencies for the entire task.
+  - how to run the code and scripts to reproduce the reported results.
+  - datasets used for testing in all parts of the task.
+
+**2. PDF Report:**
+
+- Create a detailed PDF report that encompasses the entire task. The report should include sections for each component of the task.
+
+**3. Submission Format:**
+
+- Submit the entire task, including all code and scripts, along with the `README.md` file and the PDF report, in a compressed archive (.zip).
+
+**4. Submission Deadline:**
+  2024-01-15 23:55

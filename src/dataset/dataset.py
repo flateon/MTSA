@@ -1,10 +1,7 @@
-import unittest
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
-import argparse
 
 
 class DatasetBase:
@@ -14,19 +11,19 @@ class DatasetBase:
         self.ratio_test = args.ratio_test
         self.split = False
         self.read_data()
-        self.split_data()
+        self.split_data(args.seq_len)
 
     def read_data(self):
         raise NotImplementedError
 
-    def split_data(self):
+    def split_data(self, seq_len):
         pass
 
 
 class M4Dataset(DatasetBase):
     def __init__(self, args):
         self.train_data_path = args.train_data_path
-        self.test_data_path = args.test_data_path
+        self.test_data_path = args.train_data_path
         self.type = 'm4'
         super().__init__(args)
 
@@ -85,17 +82,20 @@ class ETTDataset(DatasetBase):
         self.data_cols = cols + [self.target]
         self.data = np.expand_dims(data[self.data_cols].values, axis=0)
 
-    def split_data(self):
+    def split_data(self, seq_len):
         self.split = True
         if self.frequency == 'h':
-            self.num_train = 18 * 30 * 24
-            self.num_val = 5 * 30 * 24
+            self.num_train = 12 * 30 * 24
+            self.num_val = 4 * 30 * 24
+            self.num_test = 4 * 30 * 24
         elif self.frequency == 'm':
-            self.num_train = 18 * 30 * 24 * 4
-            self.num_val = 5 * 30 * 24 * 4
+            self.num_train = 12 * 30 * 24 * 4
+            self.num_val = 4 * 30 * 24 * 4
+            self.num_test = 4 * 30 * 24 * 4
         self.train_data = self.data[:, :self.num_train, :]
-        self.val_data = self.data[:, self.num_train: self.num_train + self.num_val, :]
-        self.test_data = self.data[:, self.num_train + self.num_val:, :]
+        self.val_data = self.data[:, self.num_train - seq_len: self.num_train + self.num_val, :]
+        self.test_data = self.data[:,
+                         self.num_train + self.num_val - seq_len: self.num_train + self.num_val + self.num_test, :]
 
 
 class CustomDataset(DatasetBase):
@@ -123,26 +123,24 @@ class CustomDataset(DatasetBase):
             self.data_cols: data columns(features/targets)
             self.data: np.ndarray, shape=(n_samples, timesteps, channels), where the last channel is the target
         '''
-        self.name = Path(self.data_path).stem
         data = pd.read_csv(self.data_path)
-
-        feature_cols = [e for e in data.columns if e not in ('date', self.target)]
-        data_cols = feature_cols + [self.target]
-
+        cols = list(data.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+        data = data[['date'] + cols + [self.target]]
         self.data_stamp = pd.to_datetime(data.date)
-        self.data_cols = data_cols
-        self.data = data[data_cols].to_numpy()[np.newaxis, ...]
+        self.data_cols = cols + [self.target]
+        self.data = np.expand_dims(data[self.data_cols].values, axis=0)
 
-    def split_data(self):
+    def split_data(self, seq_len):
         self.split = True
-        self.num_train = int(self.ratio_train * self.data.shape[1])
-        self.num_val = int(self.ratio_val * self.data.shape[1])
+        tot_num = self.data.shape[1]
+        self.num_train = int(tot_num * 0.7)
+        self.num_test = int(tot_num * 0.2)
+        self.num_val = tot_num - self.num_train - self.num_test
         self.train_data = self.data[:, :self.num_train, :]
-        if self.num_val == 0:
-            self.val_data = None
-        else:
-            self.val_data = self.data[:, self.num_train: self.num_train + self.num_val, :]
-        self.test_data = self.data[:, self.num_train + self.num_val:, :]
+        self.val_data = self.data[:, self.num_train - seq_len: self.num_train + self.num_val, :]
+        self.test_data = self.data[:, self.num_train + self.num_val - seq_len:, :]
 
 
 def get_dataset(args):
