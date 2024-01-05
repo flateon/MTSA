@@ -6,9 +6,6 @@ import pandas as pd
 
 class DatasetBase:
     def __init__(self, args):
-        self.ratio_train = args.ratio_train
-        self.ratio_val = args.ratio_val
-        self.ratio_test = args.ratio_test
         self.split = False
         self.read_data()
         self.split_data(args.seq_len)
@@ -123,6 +120,7 @@ class CustomDataset(DatasetBase):
             self.data_cols: data columns(features/targets)
             self.data: np.ndarray, shape=(n_samples, timesteps, channels), where the last channel is the target
         '''
+        self.name = Path(self.data_path).stem
         data = pd.read_csv(self.data_path)
         cols = list(data.columns)
         cols.remove(self.target)

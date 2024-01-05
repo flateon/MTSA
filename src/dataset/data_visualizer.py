@@ -70,15 +70,24 @@ def data_visualize(dataset, t):
     else:
         # (n_samples, timesteps)
         data = dataset.test_data
-        n_samples, data_len = data.shape
+        if len(data.shape) == 1:
+            n_samples = len(data)
+            data_len = len(data[0])
+        else:
+            n_samples, data_len = data.shape
+
+        if n_samples >= 6:
+            idx_samples = np.random.choice(n_samples, 6, replace=False)
+        else:
+            idx_samples = np.arange(n_samples)
 
         t_start = np.random.randint(0, data_len - t)
-        idx_samples = np.random.choice(n_samples, 6)
-
-        data = data[idx_samples, t_start:t_start + t]
+        data = data[idx_samples][t_start:t_start + t]
         t = np.arange(t_start, t_start + t)
 
-        fig, axes = plt.subplots(6, 1, dpi=300, figsize=(12, 16), constrained_layout=True)
+        fig, axes = plt.subplots(len(idx_samples), 1, dpi=300, figsize=(12, 16), constrained_layout=True)
+        if len(idx_samples) == 1:
+            axes = [axes]
         fig.suptitle(dataset.name, fontsize=18)
 
         for d, ax, idx in zip(data, axes, idx_samples):

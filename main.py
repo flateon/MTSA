@@ -1,3 +1,5 @@
+from src.models.ARIMA import ARIMA
+from src.models.ThetaMethod import ThetaMethod
 from src.models.DLinear import DLinear, DLinearClosedForm
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
@@ -61,6 +63,8 @@ def get_model(args):
         'TsfKNN':               TsfKNN,
         'DLinear':              DLinear,
         'DLinearClosedForm':    DLinearClosedForm,
+        'ARIMA':                ARIMA,
+        'Theta':                ThetaMethod,
     }
     return model_dict[args.model](args)
 
@@ -91,7 +95,7 @@ if __name__ == '__main__':
     # create trainer
     trainer = MLTrainer(model=model, transform=transform, dataset=dataset)
     # train model
-    trainer.train()
+    trainer.train(args)
     # evaluate model
     mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
     print(f"MSE: {mse:.4f}")

@@ -5,6 +5,8 @@ from src.models.DLinear import DLinear, DLinearClosedForm
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.models.base import MLForecastModel
+from src.models.ARIMA import ARIMA
+from src.models.ThetaMethod import ThetaMethod
 from argparse import Namespace as Args
 
 
@@ -19,6 +21,20 @@ class TestModels(unittest.TestCase):
         self.X_test = np.random.rand(3, self.seq_len, self.n_channels)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
         self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len)
+
+    def test_arima(self):
+        model = ARIMA(self.args)
+        model.fit(self.X, self.args)
+        forecast = model.forecast(self.X_test, self.pred_len)
+
+        self.assertEqual(forecast.shape, self.fore_shape)
+
+    def test_theta(self):
+        model = ThetaMethod(self.args)
+        model.fit(self.X, self.args)
+        forecast = model.forecast(self.X_test, self.pred_len)
+
+        self.assertEqual(forecast.shape, self.fore_shape)
 
     def test_zero_forecast(self):
         model = ZeroForecast()
