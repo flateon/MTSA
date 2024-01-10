@@ -2,6 +2,7 @@ import numpy as np
 import unittest
 
 from src.models.DLinear import DLinear, DLinearClosedForm
+from src.models.ResidualModel import FLinear
 from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.models.base import MLForecastModel
@@ -15,12 +16,22 @@ class TestModels(unittest.TestCase):
         self.seq_len = 96
         self.pred_len = 32
         self.n_channels = 3
+        self.n_train = 500
+        self.n_test = 3
         # (n_samples, timestamps, channels)
-        self.X = np.random.rand(1, 1000, self.n_channels)
+        self.X = np.random.rand(1, self.n_train, self.n_channels) + np.arange(0, self.n_train)[:, np.newaxis].repeat(
+            self.n_channels, axis=-1)
         # (n_samples, timestamps, channels)
-        self.X_test = np.random.rand(3, self.seq_len, self.n_channels)
+        self.X_test = np.random.rand(self.n_test, self.seq_len, self.n_channels)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
-        self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len)
+        self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len, individual=False, period=24)
+
+    def test_flinear(self):
+        model = FLinear(self.args)
+        model.fit(self.X, self.args)
+        forecast = model.forecast(self.X_test, self.pred_len)
+
+        self.assertEqual(forecast.shape, self.fore_shape)
 
     def test_arima(self):
         model = ARIMA(self.args)
@@ -55,17 +66,20 @@ class TestModels(unittest.TestCase):
         self.assertTrue(np.all(forecast == expected_forecast))
 
     def test_linear_regression(self):
-        model = LinearRegression()
-        model.fit(self.X, self.args)
-        forecast = model.forecast(self.X_test, self.pred_len)
+        for individual in (True, False):
+            setattr(self.args, 'individual', individual)
+            model = LinearRegression(self.args)
+            model.fit(self.X, self.args)
+            forecast = model.forecast(self.X_test, self.pred_len)
 
-        self.assertEqual(forecast.shape, self.fore_shape)
-        # TODO add value assert
+            self.assertEqual(forecast.shape, self.fore_shape)
 
     def test_d_linear(self):
         for individual in (True, False):
             for decomposition in ('moving_average', 'differential', 'classic'):
-                model = DLinear(Args(individual=individual, decomposition=decomposition))
+                setattr(self.args, 'individual', individual)
+                setattr(self.args, 'decomposition', decomposition)
+                model = DLinear(self.args)
                 model.fit(self.X, self.args)
                 forecast = model.forecast(self.X_test, self.pred_len)
 
@@ -74,7 +88,9 @@ class TestModels(unittest.TestCase):
     def test_d_linear_closed_form(self):
         for individual in (True, False):
             for decomposition in ('moving_average', 'differential', 'classic'):
-                model = DLinearClosedForm(Args(individual=individual, decomposition=decomposition))
+                setattr(self.args, 'individual', individual)
+                setattr(self.args, 'decomposition', decomposition)
+                model = DLinearClosedForm(self.args)
                 model.fit(self.X, self.args)
                 forecast = model.forecast(self.X_test, self.pred_len)
 
@@ -101,8 +117,9 @@ class TestModels(unittest.TestCase):
                 for k in ('brute_force', 'lsh'):
                     for d in ('euclidean', 'manhattan', 'chebyshev', 'minkowski', 'cosine', 'decompose', 'zero'):
                         for decomposition in ('moving_average', 'differential', 'classic'):
-                            args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=6, num_hashes=2,
-                                        embedding=e, decomposition=decomposition, tau=1)
+                            args = Args(n_neighbors=3, distance=d, msas=m, knn=k, num_bits=4, num_hashes=2,
+                                        embedding=e, decomposition=decomposition, tau=1, seq_len=self.seq_len,
+                                        pred_len=self.pred_len)
                             model = TsfKNN(args)
                             model.fit(self.X, args)
                             forecast = model.forecast(self.X_test, self.pred_len)
@@ -114,7 +131,7 @@ class TestModels(unittest.TestCase):
 
         # lsh test if the number of candidates is less than k
         args = Args(n_neighbors=3, distance='euclidean', msas='MIMO', knn='lsh', num_bits=12, num_hashes=2,
-                    embedding='lag', tau=1)
+                    embedding='lag', tau=1, seq_len=self.seq_len, pred_len=self.pred_len)
         model = TsfKNN(args)
         model.fit(self.X, args)
         forecast = model.forecast(self.X_test, self.pred_len)
@@ -127,10 +144,14 @@ class TestModels(unittest.TestCase):
 
         # test raise
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo', tau=1))
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='brute_force', embedding='foo', tau=1,
+                               seq_len=self.seq_len, pred_len=self.pred_len))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag', tau=1))
+                          Args(n_neighbors=3, distance='zero', msas='MIMO', knn='foo', embedding='lag', tau=1,
+                               seq_len=self.seq_len, pred_len=self.pred_len))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag', tau=1))
+                          Args(n_neighbors=3, distance='zero', msas='foo', knn='brute_force', embedding='lag', tau=1,
+                               seq_len=self.seq_len, pred_len=self.pred_len))
         self.assertRaises(ValueError, TsfKNN,
-                          Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag', tau=1))
+                          Args(n_neighbors=3, distance='foo', msas='MIMO', knn='brute_force', embedding='lag', tau=1,
+                               seq_len=self.seq_len, pred_len=self.pred_len))

@@ -11,8 +11,9 @@ class DLinearClosedForm(MLForecastModel):
     def __init__(self, args) -> None:
         super().__init__()
         self.decomposition, self.n_components = get_decomposition(args.decomposition)
-        self.models = [LinearRegression() for _ in range(self.n_components)]
+        self.models = [LinearRegression(args) for _ in range(self.n_components)]
         self.individual = args.individual
+        self.period = args.period
 
     def _fit(self, X: np.ndarray, args) -> None:
         # trend, seasonal = moving_average(X)
@@ -34,17 +35,17 @@ class DLinearClosedForm(MLForecastModel):
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
         x_windowed, y_windowed = np.split(train_data, [seq_len], axis=1)
 
-        x_decomposed = self.decomposition(x_windowed)
-        y_decomposed = self.decomposition(y_windowed)
+        x_decomposed = self.decomposition(x_windowed, self.period)
+        y_decomposed = self.decomposition(y_windowed, self.period)
         for x, y, model in zip(x_decomposed, y_decomposed, self.models):
-            model.calc_weight(x, y)
+            model.fit_windowed(x, y)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
         n_samples, seq_len, n_channels = X.shape
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, seq_len, 1)
 
-        decomposed = self.decomposition(X)
+        decomposed = self.decomposition(X, self.period)
 
         pred = sum((model.forecast(x, pred_len) for model, x in zip(self.models, decomposed)))
 
@@ -68,6 +69,7 @@ class DLinear(MLForecastModel):
         super().__init__()
         self.model = None
         self.individual = args.individual
+        self.period = args.period
         self.decomposition, self.n_components = get_decomposition(args.decomposition)
 
     def _fit(self, X: np.ndarray, args) -> None:
@@ -83,13 +85,13 @@ class DLinear(MLForecastModel):
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
         x_windowed, y_windowed = np.split(train_data, [seq_len], axis=1)
 
-        x_decomposed = self.decomposition(x_windowed)
+        x_decomposed = self.decomposition(x_windowed, period=self.period)
         x_decomposed = (torch.tensor(x, dtype=torch.float32) for x in x_decomposed)
         y = torch.tensor(y_windowed, dtype=torch.float32)
 
         self.model = DLinearModel(seq_len, pred_len, n_channels, self.n_components)
         train_loader = DataLoader(TensorDataset(*x_decomposed, y), batch_size=32, shuffle=True)
-        trainer = L.Trainer(max_epochs=10)
+        trainer = L.Trainer(max_steps=50000, max_epochs=10, enable_progress_bar=False)
         trainer.fit(self.model, train_loader)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -97,8 +99,8 @@ class DLinear(MLForecastModel):
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, seq_len, 1)
 
-        x_decomposed = self.decomposition(X)
-        with torch.no_grad():
+        x_decomposed = self.decomposition(X, period=self.period)
+        with torch.inference_mode():
             x_decomposed = tuple(torch.tensor(x, dtype=torch.float32) for x in x_decomposed)
             pred = self.model(x_decomposed).numpy()
 

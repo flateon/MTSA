@@ -59,7 +59,7 @@ class TestDecomposition(unittest.TestCase):
             self.assertEqual(seasonal.shape, data.shape)
             self.assertEqual(resid.shape, data.shape)
             self.assertEqual(n_components, 3)
-            self.assertTrue(np.allclose(trend * seasonal * resid, data))
+            self.assertTrue(np.allclose(trend + seasonal + resid, data))
 
     def test_stl_decomposition(self):
         for data in self.data:

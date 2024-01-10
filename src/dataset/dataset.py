@@ -77,7 +77,7 @@ class ETTDataset(DatasetBase):
         data = data[['date'] + cols + [self.target]]
         self.data_stamp = pd.to_datetime(data.date)
         self.data_cols = cols + [self.target]
-        self.data = np.expand_dims(data[self.data_cols].values, axis=0)
+        self.data = np.expand_dims(data[self.data_cols].values, axis=0).astype(np.float32)
 
     def split_data(self, seq_len):
         self.split = True
@@ -128,7 +128,7 @@ class CustomDataset(DatasetBase):
         data = data[['date'] + cols + [self.target]]
         self.data_stamp = pd.to_datetime(data.date)
         self.data_cols = cols + [self.target]
-        self.data = np.expand_dims(data[self.data_cols].values, axis=0)
+        self.data = np.expand_dims(data[self.data_cols].values, axis=0).astype(np.float32)
 
     def split_data(self, seq_len):
         self.split = True

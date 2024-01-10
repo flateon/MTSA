@@ -1,9 +1,11 @@
+from multiprocessing import Pool
 from typing import Union
 
 import numpy as np
 from scipy.ndimage import convolve1d
 from scipy.optimize import minimize
 from statsmodels.tsa.stl._stl import STL
+from tqdm import trange, tqdm
 
 
 def moving_average(x, period: Union[int, tuple] = 24, return_seasonal: bool = True):
@@ -127,49 +129,92 @@ def classic_decomposition(x, period=24):
     return trend, seasonal, resid
 
 
-def STL_decomposition(x, seasonal_period=13):
-    """
-    Seasonal and Trend decomposition using Loess
-    Args:
-        x (numpy.ndarray): Input time series data
-        seasonal_period (int): Seasonal period
-    Returns:
-        trend (numpy.ndarray): Trend component
-        seasonal (numpy.ndarray): Seasonal component
-        residual (numpy.ndarray): Residual component
-    """
-    trend, seasonal, residual = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
-    for n in range(x.shape[0]):
-        for c in range(x.shape[2]):
-            result = STL(x[n, :, c], seasonal_period).fit()
-            trend[n, :, c], seasonal[n, :, c], residual[n, :, c] = result.trend, result.seasonal, result.resid
-    return trend, seasonal, residual
+class STL_multiprocessing:
+    def stl_channel(self, x_):
+        trend, seasonal, residual = np.empty_like(x_), np.empty_like(x_), np.empty_like(x_)
+        for c in range(x_.shape[-1]):
+            result = STL(x_[:, c], self.period).fit()
+            trend[:, c], seasonal[:, c], residual[:, c] = result.trend, result.seasonal, result.resid
+        return trend, seasonal, residual
+
+    def __call__(self, x, period=13):
+        """
+        Seasonal and Trend decomposition using Loess
+        Args:
+            x (numpy.ndarray): Input time series data
+            period (int): Seasonal period
+        Returns:
+            trend (numpy.ndarray): Trend component
+            seasonal (numpy.ndarray): Seasonal component
+            residual (numpy.ndarray): Residual component
+        """
+        self.period = period
+
+        with Pool() as pool:
+            result = list(tqdm(pool.imap(self.stl_channel, x, chunksize=4), total=len(x), leave=False))
+        trend = np.stack([r[0] for r in result], axis=0)
+        seasonal = np.stack([r[1] for r in result], axis=0)
+        residual = np.stack([r[2] for r in result], axis=0)
+        return trend, seasonal, residual
 
 
-def X11_decomposition(x, seasonal_period=13):
+# def STL_decomposition_(x, period=13):
+#     trend, seasonal, residual = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
+#
+#     for n in range(x.shape[0]):
+#         x_ = x[n]
+#         for c in range(x_.shape[-1]):
+#             result = STL(x_[:, c], period).fit()
+#             trend[n, :, c], seasonal[n, :, c], residual[n, :, c] = result.trend, result.seasonal, result.resid
+#     return trend, seasonal, residual
+
+
+def STL_decomposition(x, period=13):
+    return STL_multiprocessing()(x, period=period)
+
+
+def X11_decomposition(x, period=13, additive=True):
     """
     X11 decomposition
     Args:
         x (numpy.ndarray): Input time series data
-        seasonal_period (int): Seasonal period
+        period (int): Seasonal period
+        additive (bool): Whether to use additive decomposition
     Returns:
         trend (numpy.ndarray): Trend component
         seasonal (numpy.ndarray): Seasonal component
         residual (numpy.ndarray): Residual component
     """
-    # T_1 = M_2x12(x)
-    T_1 = moving_average(x, (2, 12), return_seasonal=False)
-    Y_1 = x / T_1
-    S_1 = moving_average(Y_1, (3, 3), False) / moving_average(Y_1, (2, 12), False)
-    X_2 = x / S_1
+    if period % 2 == 0:
+        period += 1
+    if additive:
+        # T_1 = M_2x12(x)
+        T_1 = moving_average(x, (2, 12), return_seasonal=False)
+        Y_1 = x - T_1
+        S_1 = moving_average(Y_1, (3, 3), False) - moving_average(Y_1, (2, 12), False)
+        X_2 = x - S_1
 
-    T_2 = henderson_moving_average(X_2, period=13)
-    Y_2 = x / T_2
-    S_2 = moving_average(Y_2, (3, 5), False) / moving_average(Y_2, (2, 12), False)
-    X_3 = x / S_2
+        T_2 = henderson_moving_average(X_2, period=13)
+        Y_2 = x - T_2
+        S_2 = moving_average(Y_2, (3, 5), False) - moving_average(Y_2, (2, 12), False)
+        X_3 = x - S_2
 
-    T_3 = henderson_moving_average(X_3, period=seasonal_period)
-    I_3 = X_3 / T_3
+        T_3 = henderson_moving_average(X_3, period=period)
+        I_3 = X_3 - T_3
+    else:
+        # T_1 = M_2x12(x)
+        T_1 = moving_average(x, (2, 12), return_seasonal=False)
+        Y_1 = x / T_1
+        S_1 = moving_average(Y_1, (3, 3), False) / moving_average(Y_1, (2, 12), False)
+        X_2 = x / S_1
+
+        T_2 = henderson_moving_average(X_2, period=13)
+        Y_2 = x / T_2
+        S_2 = moving_average(Y_2, (3, 5), False) / moving_average(Y_2, (2, 12), False)
+        X_3 = x / S_2
+
+        T_3 = henderson_moving_average(X_3, period=period)
+        I_3 = X_3 / T_3
 
     return T_3, S_2, I_3
 

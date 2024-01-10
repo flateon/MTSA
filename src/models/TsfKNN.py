@@ -1,4 +1,5 @@
 from argparse import Namespace
+from multiprocessing import Pool
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -11,7 +12,10 @@ from src.utils.distance import euclidean, manhattan, chebyshev, minkowski, cosin
 class TsfKNN(MLForecastModel):
     def __init__(self, args: Namespace):
         super().__init__()
+        self.y_train = None
+        self.x_train = None
         self.k = args.n_neighbors
+        self.args = args
         if args.distance == 'euclidean':
             self.distance = euclidean
         elif args.distance == 'manhattan':
@@ -49,30 +53,41 @@ class TsfKNN(MLForecastModel):
             raise ValueError(f'Unknown msas {args.msas}')
 
     def _fit(self, X: np.ndarray, args) -> None:
-        self.X = X
+        channels = X.shape[-1]
+        window_len = args.seq_len + args.pred_len
 
-    def _search(self, x, y, seq_len, pred_len):
+        train_data = sliding_window_view(X, (window_len, channels), axis=(1, 2)).reshape(-1, window_len, channels)
+        self.x_train, self.y_train = np.split(train_data, [args.seq_len], axis=1)
+
+    def fit_windowed(self, X, Y):
+        """
+        :param X: (num_vectors, seq_len, channels)
+        :param Y: (num_vectors, pred_len, channels)
+        """
+        self.x_train, self.y_train = X, Y
+        self.fitted = True
+
+    def _search(self, x, pred_len=None):
         """
         :param x: (seq_len, channels)
-        :param y: (num_vectors, seq_len, channels)
-        :param seq_len: int
         :param pred_len: int
         :return: (pred_len, channels)
         """
+        pred_len = self.pred_len if pred_len is None else pred_len
         if self.msas == 'MIMO':
             indices_of_smallest_k = self.knn.query(x)
-            neighbor_fore = y[indices_of_smallest_k]
+            neighbor_fore = self.y_train[indices_of_smallest_k]
             x_fore = np.mean(neighbor_fore, axis=0)
             return x_fore
         elif self.msas == 'recursive':
             indices_of_smallest_k = self.knn.query(x)
-            neighbor_fore = y[indices_of_smallest_k, 0:1]
+            neighbor_fore = self.y_train[indices_of_smallest_k, 0:1]
             x_fore = np.mean(neighbor_fore, axis=0, keepdims=False)
             x_new = np.concatenate((x[1:], x_fore))
             if pred_len == 1:
                 return x_fore
             else:
-                return np.concatenate((x_fore, self._search(x_new, y, seq_len, pred_len - 1)), axis=0)
+                return np.concatenate((x_fore, self._search(x_new, pred_len - 1)), axis=0)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
         """
@@ -80,12 +95,9 @@ class TsfKNN(MLForecastModel):
         :param pred_len: int
         :return: forecast: (n_samples, pred_len, channels)
         """
-        fore = []
-        bs, seq_len, channels = X.shape
-        window_len = seq_len + pred_len
+        self.pred_len = pred_len
 
-        train_data = sliding_window_view(self.X, (window_len, channels), axis=(1, 2)).reshape(-1, window_len, channels)
-        x_train, y_train = np.split(train_data, [seq_len], axis=1)
+        x_train, y_train = self.x_train, self.y_train
 
         if self.embedding == 'fourier':
             x_train = np.fft.rfftn(x_train, axes=(1,))
@@ -95,11 +107,11 @@ class TsfKNN(MLForecastModel):
             X = X[:, ::-self.tau][:, ::-1]
         self.knn.insert(x_train)
 
-        for x in tqdm(X, leave=False):
-            x_fore = self._search(x, y_train, seq_len, pred_len)
-            fore.append(x_fore)
-        fore = np.stack(fore, axis=0)
-        return fore
+        with Pool() as pool:
+            pred = np.array(list(tqdm(pool.imap(self._search, X, chunksize=256), total=len(X), leave=False)))
+        # pred = np.array(list(tqdm(map(self._search, X), total=len(X))))
+
+        return pred
 
 
 class BruteForce:

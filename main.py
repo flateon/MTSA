@@ -5,6 +5,7 @@ from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.utils.transforms import IdentityTransform, NormalizationTransform, StandardizationTransform, \
     MeanNormalizationTransform, YeoJohnsonTransform
+from src.models.ResidualModel import FLinear
 from trainer import MLTrainer
 from src.dataset.dataset import get_dataset
 import argparse
@@ -22,6 +23,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default='ETT', help='dataset type, options: [M4, ETT, Custom]')
     parser.add_argument('--target', type=str, default='OT', help='target feature')
     parser.add_argument('--frequency', type=str, default='h', help='frequency of time series data, options: [h, m]')
+    parser.add_argument('--period', type=int, default=24, help='period of seasonal data')
 
     # forcast task config
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -30,7 +32,7 @@ def get_args():
     # model define
     parser.add_argument('--model', type=str, default='TsfKNN', help='model name')
     parser.add_argument('--lamda', type=float, default=1, help='lamda for Yeo Johnson Transform')
-    parser.add_argument('--n_neighbors', type=int, default=71, help='number of neighbors used in TsfKNN')
+    parser.add_argument('--n_neighbors', type=int, default=51, help='number of neighbors used in TsfKNN')
     parser.add_argument('--distance', type=str, default='cosine', help='distance used in TsfKNN')
     parser.add_argument('--msas', type=str, default='MIMO', help='multi-step ahead strategy used in TsfKNN, options: '
                                                                  '[MIMO, recursive]')
@@ -40,12 +42,13 @@ def get_args():
     parser.add_argument('--knn', type=str, default='lsh', help='knn method used in TsfKNN, options: '
                                                                '[brute_force, lsh]')
     parser.add_argument('--num_bits', type=int, default=8, help='num of bits for lsh method used in TsfKNN')
-    parser.add_argument('--num_hashes', type=int, default=16, help='num of hashes for lsh method used in TsfKNN')
+    parser.add_argument('--num_hashes', type=int, default=1, help='num of hashes for lsh method used in TsfKNN')
     parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
+    parser.add_argument('--fl_weight', type=float, default=-1, help='weight of FLinear model, set -1 for linspace [0, 1]')
 
     parser.add_argument('--individual', action='store_true', default=False)
     parser.add_argument('--decomposition', type=str, default='classic',
-                        help='decomposition method used in TsfKNN, options: [moving_average, differential, classic]')
+                        help='decomposition method, options: [moving_average, differential, classic]')
 
     # transform define
     parser.add_argument('--transform', type=str, default='StandardizationTransform')
@@ -58,13 +61,14 @@ def get_model(args):
     model_dict = {
         'ZeroForecast':         ZeroForecast,
         'MeanForecast':         MeanForecast,
-        'LinearRegression':     LinearRegression,
+        'Linear':               LinearRegression,
         'ExponentialSmoothing': ExponentialSmoothing,
         'TsfKNN':               TsfKNN,
         'DLinear':              DLinear,
         'DLinearClosedForm':    DLinearClosedForm,
         'ARIMA':                ARIMA,
         'Theta':                ThetaMethod,
+        'FLinear':             FLinear,
     }
     return model_dict[args.model](args)
 
