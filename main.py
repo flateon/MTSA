@@ -1,4 +1,5 @@
 from src.models.ARIMA import ARIMA
+from src.models.SPIRIT import SPIRIT
 from src.models.ThetaMethod import ThetaMethod
 from src.models.DLinear import DLinear, DLinearClosedForm
 from src.models.TsfKNN import TsfKNN
@@ -68,7 +69,8 @@ def get_model(args):
         'DLinearClosedForm':    DLinearClosedForm,
         'ARIMA':                ARIMA,
         'Theta':                ThetaMethod,
-        'FLinear':             FLinear,
+        'FLinear':              FLinear,
+        'SPIRIT':               SPIRIT,
     }
     return model_dict[args.model](args)
 
