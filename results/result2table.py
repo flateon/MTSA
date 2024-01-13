@@ -5,11 +5,11 @@ results = pd.read_csv('results/test_model_with_timesnet.csv')
 metrics = ['MSE', 'MAE']
 title = 'Models'
 results_title = 'model'
-
-form = [[title, ''], ['Metric', ''], ]
 # models = results[results_title].unique()
 models = ['FLinear', 'TimesNet', 'Linear', 'DLinear', 'ARIMA']
 
+
+form = [[title, ''], ['Metric', ''], ]
 results = results[results[results_title].isin(models)]
 
 for m in models:
@@ -18,7 +18,7 @@ for m in models:
 
 for dataset in results['dataset'].unique():
     for pred_len in results['pred_len'].unique():
-        row = [dataset, pred_len]
+        row = [dataset, str(pred_len)]
         for m in models:
             data = results[(results['dataset'] == dataset) &
                            (results['pred_len'] == pred_len)]
@@ -47,3 +47,4 @@ for dataset in results['dataset'].unique():
                 avg_row.append(f'{value:.3f}')
     form.append(avg_row)
 pd.DataFrame(form[1:], columns=form[0]).to_csv('./results/test_form.csv', index=False)
+print(' \\\ \n'.join([' & '.join(f) for f in form]))

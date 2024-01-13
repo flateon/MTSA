@@ -5,7 +5,7 @@ from src.models.TsfKNN import TsfKNN
 from src.models.baselines import ZeroForecast, MeanForecast, LinearRegression, ExponentialSmoothing
 from src.utils.transforms import IdentityTransform, NormalizationTransform, StandardizationTransform, \
     MeanNormalizationTransform, YeoJohnsonTransform
-from src.models.ResidualModel import FLinear
+from src.models.ResidualModel import FLinear, FLinearGD
 from trainer import MLTrainer
 from src.dataset.dataset import get_dataset
 import argparse
@@ -44,7 +44,8 @@ def get_args():
     parser.add_argument('--num_bits', type=int, default=8, help='num of bits for lsh method used in TsfKNN')
     parser.add_argument('--num_hashes', type=int, default=1, help='num of hashes for lsh method used in TsfKNN')
     parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
-    parser.add_argument('--fl_weight', type=float, default=-1, help='weight of FLinear model, set -1 for linspace [0, 1]')
+    parser.add_argument('--fl_weight', type=str, default='linear', help='weight of FLinear model, options: [time, '
+                                                                        'freq, linear, constant, learn]')
 
     parser.add_argument('--individual', action='store_true', default=False)
     parser.add_argument('--decomposition', type=str, default='classic',
@@ -68,7 +69,8 @@ def get_model(args):
         'DLinearClosedForm':    DLinearClosedForm,
         'ARIMA':                ARIMA,
         'Theta':                ThetaMethod,
-        'FLinear':             FLinear,
+        'FLinear':              FLinear,
+        'FLinearGD':            FLinearGD,
     }
     return model_dict[args.model](args)
 

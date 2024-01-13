@@ -91,7 +91,7 @@ class DLinear(MLForecastModel):
 
         self.model = DLinearModel(seq_len, pred_len, n_channels, self.n_components)
         train_loader = DataLoader(TensorDataset(*x_decomposed, y), batch_size=32, shuffle=True)
-        trainer = L.Trainer(max_steps=50000, max_epochs=10, enable_progress_bar=False)
+        trainer = L.Trainer(max_steps=50000, max_epochs=10, enable_progress_bar=True, logger=False, enable_checkpointing=False)
         trainer.fit(self.model, train_loader)
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -135,7 +135,7 @@ class DLinearModel(L.LightningModule):
         y = batch[-1]
         pred = self.forward(x_decomposed)
         loss = nn.functional.mse_loss(pred, y)
-        self.log("train_loss", loss)
+        # self.log("train_loss", loss)
         return loss
 
     def configure_optimizers(self):

@@ -39,6 +39,7 @@ ALL_MODEL = (
     'ARIMA',
     'Theta',
     'FLinear',
+    'FLinearGD',
 )
 
 if __name__ == '__main__':

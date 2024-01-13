@@ -29,10 +29,10 @@ PRED_LEN = (
 )
 
 ALL_WEIGHT = (
-    (0.0, 'time only'),
-    (1.0, 'freq only'),
-    (0.5, 'constant'),
-    (-1, 'linear'),
+    ('time', 'time only'),
+    ('freq', 'freq only'),
+    ('constant', 'constant mix'),
+    ('linear', 'linear increase'),
 )
 
 if __name__ == '__main__':
