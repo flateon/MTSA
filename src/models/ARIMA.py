@@ -46,15 +46,18 @@ class ARIMA(MLForecastModel):
         else:
             self.order = [self.order] * X.shape[-1]
 
-        for channel in trange(X.shape[-1], leave=False, desc='Fitting'):
-            x = X[:, channel]
-            self.models.append(ARIMABase(x, order=self.order[channel]).fit())
+        # for channel in trange(X.shape[-1], leave=False, desc='Fitting'):
+        #     x = X[:, channel]
+        #     self.models.append(ARIMABase(x, order=self.order[channel]).fit())
 
     def _forecast_channel(self, X):
         pred = np.zeros((self.pred_len, X.shape[-1]))
         for channel in range(X.shape[-1]):
             x = X[:, channel]
-            pred[:, channel] = self.models[channel].apply(x).forecast(self.pred_len)
+            try:
+                pred[:, channel] = ARIMABase(x, order=self.order[channel]).fit().forecast(self.pred_len)
+            except:
+                pred[:, channel] = np.ones((self.pred_len,)) * x[-1]
         return pred
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
