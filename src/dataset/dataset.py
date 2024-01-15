@@ -141,10 +141,24 @@ class CustomDataset(DatasetBase):
         self.test_data = self.data[:, self.num_train + self.num_val - seq_len:, :]
 
 
-def get_dataset(args):
+def get_dataset(args) -> list[DatasetBase]:
     dataset_dict = {
         'M4':     M4Dataset,
         'ETT':    ETTDataset,
         'Custom': CustomDataset,
     }
-    return dataset_dict[args.dataset](args)
+    dataset = []
+    if hasattr(args, 'data_path') and isinstance(args.data_path, str):
+        args.data_path = [args.data_path]
+    else:
+        args.data_path = ['']
+    if hasattr(args, 'frequency') and isinstance(args.frequency, str):
+        args.frequency = [args.frequency] * len(args.data_path)
+    else:
+        args.frequency = ['h'] * len(args.data_path)
+
+    for path, freq in zip(args.data_path, args.frequency):
+        args.data_path = path
+        args.frequency = freq
+        dataset.append(dataset_dict[args.dataset](args))
+    return dataset

@@ -18,12 +18,13 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     # dataset config
-    parser.add_argument('--data_path', type=str, default='./dataset/ETT/ETTh1.csv')
+    parser.add_argument('--data_path', default=['./dataset/ETT/ETTh1.csv'], nargs='+')
     parser.add_argument('--train_data_path', type=str, default='./dataset/m4/Daily-train.csv')
     parser.add_argument('--test_data_path', type=str, default='./dataset/m4/Daily-test.csv')
     parser.add_argument('--dataset', type=str, default='ETT', help='dataset type, options: [M4, ETT, Custom]')
     parser.add_argument('--target', type=str, default='OT', help='target feature')
-    parser.add_argument('--frequency', type=str, default='h', help='frequency of time series data, options: [h, m]')
+    parser.add_argument('--frequency', type=str, default=['h'], nargs='+', help='frequency of time series data, '
+                                                                                'options: [h, m]')
     parser.add_argument('--period', type=int, default=24, help='period of seasonal data')
 
     # forcast task config
@@ -105,9 +106,10 @@ if __name__ == '__main__':
     # train model
     trainer.train(args)
     # evaluate model
-    mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
-    print(f"MSE: {mse:.4f}")
-    print(f"MAE: {mae:.4f}")
-    print(f"MAPE: {mape:.4f}%")
-    print(f"SMAPE: {smape:.4f}%")
-    print(f"MASE: {mase:.4f}")
+    m = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+    for mse, mae, mape, smape, mase in m:
+        print(f"MSE: {mse:.4f}")
+        print(f"MAE: {mae:.4f}")
+        print(f"MAPE: {mape:.4f}%")
+        print(f"SMAPE: {smape:.4f}%")
+        print(f"MASE: {mase:.4f}")

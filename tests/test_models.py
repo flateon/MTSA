@@ -27,6 +27,7 @@ class TestModels(unittest.TestCase):
         self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len, individual=False, period=24)
 
     def test_flinear(self):
+        self.args.fl_weight = 'constant'
         model = FLinear(self.args)
         model.fit(self.X, self.args)
         forecast = model.forecast(self.X_test, self.pred_len)

@@ -25,18 +25,19 @@ class TestCustomDataset(unittest.TestCase):
         for kwargs in self.dataset_conf:
             for k, v in kwargs.items():
                 setattr(self.args, k, v)
-            dataset = get_dataset(self.args)
+            dataset_list = get_dataset(self.args)
 
-            # self.data_cols: data columns(features / targets)
-            self.assertIsInstance(dataset.data_cols, list)
-            self.assertEqual(self.args.target, dataset.data_cols[-1])
-            self.assertNotIn('date', dataset.data_cols)
-            # self.data: np.ndarray, shape = (n_samples, timesteps, channels)
-            self.assertIsInstance(dataset.data, np.ndarray)
-            self.assertEqual(3, len(dataset.data.shape))
-            self.assertEqual(1, dataset.data.shape[0])
-            self.assertEqual(len(dataset.data_stamp), dataset.data.shape[1])
-            self.assertEqual(len(dataset.data_cols), dataset.data.shape[2])
+            for dataset in dataset_list:
+                # self.data_cols: data columns(features / targets)
+                self.assertIsInstance(dataset.data_cols, list)
+                self.assertEqual(self.args.target, dataset.data_cols[-1])
+                self.assertNotIn('date', dataset.data_cols)
+                # self.data: np.ndarray, shape = (n_samples, timesteps, channels)
+                self.assertIsInstance(dataset.data, np.ndarray)
+                self.assertEqual(3, len(dataset.data.shape))
+                self.assertEqual(1, dataset.data.shape[0])
+                self.assertEqual(len(dataset.data_stamp), dataset.data.shape[1])
+                self.assertEqual(len(dataset.data_cols), dataset.data.shape[2])
 
     # def test_split_data(self):
     #     for kwargs in self.dataset_conf:
@@ -123,19 +124,19 @@ class TestM4Dataset(unittest.TestCase):
         for kwargs in self.dataset_conf:
             for k, v in kwargs.items():
                 setattr(self.args, k, v)
-            dataset = get_dataset(self.args)
-
-            # self.train_data: np.ndarray, shape=(n_samples, ) object: np.ndarray, shape=(timestamp, )
-            # self.test_data: np.ndarray, shape=(n_samples, )
-            self.assertIsInstance(dataset.train_data, np.ndarray)
-            self.assertIsInstance(dataset.test_data, np.ndarray)
-            self.assertIsInstance(dataset.train_data[0], np.ndarray)
-            self.assertIsNone(dataset.val_data)
-            self.assertEqual(1, len(dataset.train_data.shape))
-            self.assertEqual(1, len(dataset.train_data[0].shape))
-            self.assertEqual(1, len(dataset.test_data.shape))
-            self.assertEqual(1, len(dataset.test_data[0].shape))
-            self.assertTrue(isinstance(dataset.test_data[0], np.ndarray))
+            dataset_list = get_dataset(self.args)
+            for dataset in dataset_list:
+                # self.train_data: np.ndarray, shape=(n_samples, ) object: np.ndarray, shape=(timestamp, )
+                # self.test_data: np.ndarray, shape=(n_samples, )
+                self.assertIsInstance(dataset.train_data, np.ndarray)
+                self.assertIsInstance(dataset.test_data, np.ndarray)
+                self.assertIsInstance(dataset.train_data[0], np.ndarray)
+                self.assertIsNone(dataset.val_data)
+                self.assertEqual(1, len(dataset.train_data.shape))
+                self.assertEqual(1, len(dataset.train_data[0].shape))
+                self.assertEqual(1, len(dataset.test_data.shape))
+                self.assertEqual(1, len(dataset.test_data[0].shape))
+                self.assertTrue(isinstance(dataset.test_data[0], np.ndarray))
 
 
 class TestDatasetBase(unittest.TestCase):
