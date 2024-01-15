@@ -19,7 +19,7 @@ Git clone our repository, creating a conda environment and activate it via the f
 ```bash
 cd MTSA
 conda env create -f environment.yml
-conda activate MTSA-torch
+conda activate MTSA
 ```
 
 ### Download Datasets
