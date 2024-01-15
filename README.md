@@ -1,84 +1,146 @@
-# Homework 4
+# Modern Time Series Analysis
 
-Homework 4 considers multivariate time series (multi input multi output). The datasets used here
-are `ETTh1`, `ETTh2`, `ETTm1`, `ETTm2`, `Electricity`, `Traffic`, `Weather`, `Exchange`, `ILI`.
+MTSA (Modern Time Series Analysis) is a library dedicated to the field of time series forecasting. Our primary objective
+is to provide a comprehensive collection of both classical and deep learning-based algorithms for tackling time series
+forecasting tasks.
+
+We will gradually enhance and expand our library as the TSA (Time Series Analysis) course progresses.
+
+[TSA home page](https://www.lamda.nju.edu.cn/yehj/TSA2023/)
+
+## Getting Started
+
+To get started with MTSA, follow these steps:
+
+### Prerequisites
+
+Git clone our repository, creating a conda environment and activate it via the following command
+
+```bash
+cd MTSA
+conda env create -f environment.yml
+conda activate MTSA
+```
+
+### Download Datasets
+
+Download the datasets from [nju box](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/) and organize them as follows:
+
+```
+MTSA
+└── dataset
+    ├── electricity
+    │   └── electricity.csv
+    ├── ETT
+    │   ├── ETTh1.csv
+    │   ├── ETTh2.csv
+    │   ├── ETTm1.csv
+    │   └── ETTm2.csv
+    ├── exchange_rate
+    │   └── exchange_rate.csv
+    ├── illness
+    │   └── national_illness.csv
+    ├── m4
+    │   ├── Daily-test.csv
+    │   ├── Daily-train.csv
+    │   ├── Hourly-test.csv
+    │   ├── Hourly-train.csv
+    │   ├── M4-info.csv
+    │   ├── Monthly-test.csv
+    │   ├── Monthly-train.csv
+    │   ├── Quarterly-test.csv
+    │   ├── Quarterly-train.csv
+    │   ├── submission-Naive2.csv
+    │   ├── test.npz
+    │   ├── training.npz
+    │   ├── Weekly-test.csv
+    │   ├── Weekly-train.csv
+    │   ├── Yearly-test.csv
+    │   └── Yearly-train.csv
+    ├── traffic
+    │   └── traffic.csv
+    └── weather
+        └── weather.csv
+
+```
 
 ## Usage examples
 
+### Main Results
+
+To reproduce the reported results, run the following command:
+
+```bash
+python benchmark_global.py
+python benchmark_spirit.py
 ```
-python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model MeanForecast
+
+The reported results will be store in *./results/test_\*.csv*
+
+### Unittest and coverage report
+
+To test our implementation, run the unittest with the following command:
+
+```bash
+coverage run -m unittest; coverage report -m
 ```
 
-```
-python main.py --data_path ./dataset/ETT/ETTh1.csv --dataset ETT --model TsfKNN --n_neighbors 1 --msas MIMO --distance euclidean
-```
+## Roadmap
 
-## Part 1 Global-Local Model (40 pts)
+### Datasets
 
-path: `trainer.py`
+All datasets can be found [here](https://box.nju.edu.cn/d/b33a9f73813048b8b00f/).
 
-**Introduction:**
-The
-paper ["Principles and Algorithms for Forecasting Groups of Time Series: Locality and Globality"](https://arxiv.org/abs/2008.00444)
-delves into the methodologies for forecasting multiple time series, focusing on the comparison and application of local
-and global forecasting algorithms.
-It contrasts global methods, where a single forecasting model is applied to all time series, with local methods, which
-treat each time series individually. The paper reveals that **global methods can be as effective as local methods, even
-without assuming similarities among the series**. This finding challenges the common belief that global models are more
-restrictive and suggests their broader applicability in a variety of forecasting scenarios.
+- [x] M4
+- [x] ETT
+- [x] Traffic
+- [x] Electricity
+- [x] Exchange-Rate
+- [x] Weather
+- [x] ILI(illness)
 
-**Objective:** 
-Implement the global model, and compare it with local model. Datasets used 
-in the global model can be chosen from the datasets mentioned above. Models used here are `DLinear` and `TsfKNN`.
+### Models
 
-Tips: Use channel-independent models to implement global models.
+- [x] ZeroForecast
+- [x] MeanForecast
+- [x] TsfKNN
+- [x] LinearRegression
+- [x] ExponentialSmoothing
+- [x] DLinear
+- [x] DLinearClosedForm
+- [x] FLinear
+- [x] SPIRIT
 
+### Transformations
 
-## Part 2 SPIRIT (60 pts)
+- [x] IdentityTransform
+- [x] Normalization
+- [x] Standardization
+- [x] Mean Normalization
+- [x] Box-Cox
+- [x] YeoJohnsonTransform
 
-path: `trainer.py`
-path: `src/models/SPIRIT.py`
-path: ``
+### Metrics
 
-**Objective:** Implement the [SPIRIT](https://www.cs.cmu.edu/~jimeng/papers/spirit_vldb05.pdf) model which 
-is introduced in our class, and use DLinear as the forcast model signed below.
-![streaming.jpg](imgs%2Fstreaming.jpg)
+- [x] MSE
+- [x] MAE
+- [x] MASE
+- [x] MAPE
+- [x] SMAPE
 
-## Part 3 Evaluation
+### Distance
 
-**Instructions:**
+- [x] euclidean
+- [x] manhattan
+- [x] chebyshev
+- [x] minkowski
+- [x] cosine
 
-**1. Apply your models to the datasets specified at the start of this project:**
+### Decomposition
 
-Tips: You can choose the best model on one dateset and use it to predict the other datasets.
-
-The experimental settings used here are the same as [TimesNet](https://arxiv.org/abs/2210.02186). You can easily compare
-your model with past SOTA models.
-
-| Dataset | pred_len | Model           | MSE | MAE |
- |---------|----------|-----------------|-----|-----|
-| ETTh1   | 96       | TsfKNN (Global) |     |     |
-| ...     |          |                 |     |     |
-
-## Submission
-
-**1. Modified Code:**
-
-- Provide the modified code for all components of the task.
-- Include a `README.md` file in Markdown format that covers the entire task. This file should contain:
-    - how to install any necessary dependencies for the entire task.
-    - how to run the code and scripts to reproduce the reported results.
-    - datasets used for testing in all parts of the task.
-
-**2. PDF Report:**
-
-- Create a detailed PDF report that encompasses the entire task. The report should include sections for each component
-  of the task.
-
-**3. Submission Format:**
-
-- Submit the entire task, including all code and scripts, along with the `README.md` file and the PDF report, in a
-  compressed archive (.zip).
-
-**4. Submission Deadline:**
-2024-01-15 23:55
+- [x] MovingAverage
+- [x] Differencing
+- [x] Classical
+- [x] Henderson
+- [x] STL
+- [x] X11
