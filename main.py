@@ -48,7 +48,8 @@ def get_args():
     parser.add_argument('--ew', type=float, default=0.9, help='weight of Exponential Smoothing model')
     parser.add_argument('--fl_weight', type=str, default='linear', help='weight of FLinear model, options: [time, '
                                                                         'freq, linear, constant, learn]')
-
+    parser.add_argument('--pca_components', type=str, default='0.99',
+                        help='number of components for PCA, options: ["mle", int, float]')
     parser.add_argument('--individual', action='store_true', default=False)
     parser.add_argument('--decomposition', type=str, default='classic',
                         help='decomposition method, options: [moving_average, differential, classic]')

@@ -161,4 +161,4 @@ def get_dataset(args) -> list[DatasetBase]:
         args.data_path = path
         args.frequency = freq
         dataset.append(dataset_dict[args.dataset](args))
-    return dataset
+    return dataset[0] if len(dataset) == 1 else dataset

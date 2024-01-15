@@ -40,6 +40,7 @@ ALL_MODEL = (
     'Theta',
     'FLinear',
     'FLinearGD',
+    'SPIRIT',
 )
 
 if __name__ == '__main__':

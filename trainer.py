@@ -9,11 +9,13 @@ from src.utils.metrics import metrics
 class MLTrainer:
     def __init__(self, model, transform, dataset):
         self.model = model
-        self.transform = [copy(transform) for _ in range(len(dataset))]
+        self.transform = [copy(transform) for _ in range(len(dataset) if isinstance(dataset, list) else 1)]
         self.dataset = dataset
 
     def train(self, *args, **kwargs):
         X = []
+        if not isinstance(self.dataset, list):
+            self.dataset = [self.dataset]
         for d, transform in zip(self.dataset, self.transform):
             train_X = d.train_data
             t_X = transform.transform(train_X)  # .transpose((0, 2, 1)).reshape(1, -1, 1)
@@ -27,6 +29,8 @@ class MLTrainer:
 
     def evaluate(self, dataset, seq_len=96, pred_len=96):
         all_metrics = []
+        if not isinstance(dataset, list):
+            dataset = [dataset]
         for d, transform in zip(dataset, self.transform):
             if d.type == 'm4':
                 test_X = d.train_data
