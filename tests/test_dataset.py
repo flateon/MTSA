@@ -26,7 +26,8 @@ class TestCustomDataset(unittest.TestCase):
             for k, v in kwargs.items():
                 setattr(self.args, k, v)
             dataset_list = get_dataset(self.args)
-
+            if not isinstance(dataset_list, list):
+                dataset_list = [dataset_list]
             for dataset in dataset_list:
                 # self.data_cols: data columns(features / targets)
                 self.assertIsInstance(dataset.data_cols, list)
@@ -125,6 +126,8 @@ class TestM4Dataset(unittest.TestCase):
             for k, v in kwargs.items():
                 setattr(self.args, k, v)
             dataset_list = get_dataset(self.args)
+            if not isinstance(dataset_list, list):
+                dataset_list = [dataset_list]
             for dataset in dataset_list:
                 # self.train_data: np.ndarray, shape=(n_samples, ) object: np.ndarray, shape=(timestamp, )
                 # self.test_data: np.ndarray, shape=(n_samples, )

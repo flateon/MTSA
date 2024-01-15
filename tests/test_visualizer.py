@@ -47,15 +47,19 @@ class TestVisualizer(unittest.TestCase):
         for kwargs in self.dataset_conf:
             for k, v in kwargs.items():
                 setattr(args, k, v)
-            dataset = get_dataset(args)
-            for d in dataset:
-                data_visualize(d, 200)
+            dataset_list = get_dataset(args)
+            if not isinstance(dataset_list, list):
+                dataset_list = [dataset_list]
+            for dataset in dataset_list:
+                data_visualize(dataset, 200)
         self.assertEqual('y', input('Is all dataset plot correctly? (y/n)'))
 
     def test_single_channel(self):
         args = Args(ratio_train=0.7, ratio_val=0.1, ratio_test=0.2, dataset='M4', seq_len=96, pred_len=96,
                     train_data_path='./dataset/m4/Hourly-train.csv', test_data_path='./dataset/m4/Hourly-test.csv')
-        dataset = get_dataset(args)
-        for d in dataset:
+        dataset_list = get_dataset(args)
+        if not isinstance(dataset_list, list):
+            dataset_list = [dataset_list]
+        for d in dataset_list:
             data_visualize(d, 30)
         self.assertEqual('y', input('Is the dataset plot correctly? (y/n)'))
