@@ -52,12 +52,12 @@ class TsfKNN(MLForecastModel):
         else:
             raise ValueError(f'Unknown msas {args.msas}')
 
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         channels = X.shape[-1]
-        window_len = args.seq_len + args.pred_len
+        window_len = self.args.seq_len + self.args.pred_len
 
         train_data = sliding_window_view(X, (window_len, channels), axis=(1, 2)).reshape(-1, window_len, channels)
-        self.x_train, self.y_train = np.split(train_data, [args.seq_len], axis=1)
+        self.x_train, self.y_train = np.split(train_data, [self.args.seq_len], axis=1)
 
     def fit_windowed(self, X, Y):
         """

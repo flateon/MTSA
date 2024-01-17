@@ -17,7 +17,7 @@ class ThetaMethod(MLForecastModel):
         warnings.filterwarnings("ignore", category=ConvergenceWarning)
         warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         pass
 
     def _forecast_channel(self, X):

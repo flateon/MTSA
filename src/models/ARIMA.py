@@ -38,7 +38,7 @@ class ARIMA(MLForecastModel):
             order.append((p, d, q))
         return order
 
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         if len(X.shape) == 3:
             X = X[0, ...]
         if self.order is None:

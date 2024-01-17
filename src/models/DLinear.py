@@ -14,8 +14,9 @@ class DLinearClosedForm(MLForecastModel):
         self.models = [LinearRegression(args) for _ in range(self.n_components)]
         self.individual = args.individual
         self.period = args.period
+        self.args = args
 
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         # trend, seasonal = moving_average(X)
         # if not self.individual:
         #     trend = trend.transpose((0, 2, 1)).reshape(-1, trend.shape[1], 1)
@@ -28,8 +29,8 @@ class DLinearClosedForm(MLForecastModel):
             X = X.transpose((0, 2, 1)).reshape(-1, train_len, 1)
             n_channels = 1
 
-        seq_len = args.seq_len
-        pred_len = args.pred_len
+        seq_len = self.args.seq_len
+        pred_len = self.args.pred_len
         window_len = seq_len + pred_len
 
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]
@@ -70,16 +71,17 @@ class DLinear(MLForecastModel):
         self.model = None
         self.individual = args.individual
         self.period = args.period
+        self.args = args
         self.decomposition, self.n_components = get_decomposition(args.decomposition)
 
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         n_samples, train_len, n_channels = X.shape
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, train_len, 1)
             n_channels = 1
 
-        seq_len = args.seq_len
-        pred_len = args.pred_len
+        seq_len = self.args.seq_len
+        pred_len = self.args.pred_len
         window_len = seq_len + pred_len
 
         train_data = np.concatenate([sliding_window_view(x, (window_len, n_channels)) for x in X])[:, 0, ...]

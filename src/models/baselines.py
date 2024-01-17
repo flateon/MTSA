@@ -5,7 +5,7 @@ from src.models.base import MLForecastModel
 
 
 class ZeroForecast(MLForecastModel):
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -13,7 +13,7 @@ class ZeroForecast(MLForecastModel):
 
 
 class MeanForecast(MLForecastModel):
-    def _fit(self, X: np.ndarray, args) -> None:
+    def _fit(self, X: np.ndarray, val_X=None) -> None:
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:
@@ -26,9 +26,10 @@ class LinearRegression(MLForecastModel):
         super().__init__()
         # X: np.ndarray, shape=(n_samples, timestamps, n_channels)
         self.W = None
+        self.args = args
         self.individual = args.individual
 
-    def _fit(self, X: np.ndarray, args):
+    def _fit(self, X: np.ndarray, val_X=None):
         """
         :param:
         X: np.ndarray, shape=(n_samples, timestamps, n_channels)
@@ -38,8 +39,8 @@ class LinearRegression(MLForecastModel):
             X = X.transpose((0, 2, 1)).reshape(-1, train_len, 1)
             n_channels = 1
 
-        seq_len = args.seq_len
-        pred_len = args.pred_len
+        seq_len = self.args.seq_len
+        pred_len = self.args.pred_len
         self.pred_len = pred_len
 
         window_len = seq_len + pred_len
@@ -59,6 +60,7 @@ class LinearRegression(MLForecastModel):
         """
         _, seq_len, n_channels = X.shape
         _, pred_len, _ = Y.shape
+
         if not self.individual:
             X = X.transpose((0, 2, 1)).reshape(-1, seq_len, 1)
             Y = Y.transpose((0, 2, 1)).reshape(-1, pred_len, 1)
@@ -81,6 +83,7 @@ class LinearRegression(MLForecastModel):
         :return: forecast: shape=(n_samples, pred_len, channels)
         """
         n_samples, timestamps, n_channels = X_test.shape
+
         if not self.individual:
             original_n_samples, timestamps, original_channels = X_test.shape
             X_test = X_test.transpose((0, 2, 1)).reshape(-1, timestamps, 1)
@@ -98,6 +101,7 @@ class LinearRegression(MLForecastModel):
 
         return pred
 
+
 class ExponentialSmoothing(MLForecastModel):
     def __init__(self, arg, *args, **kwargs) -> None:
         super().__init__()
@@ -105,7 +109,7 @@ class ExponentialSmoothing(MLForecastModel):
         self.ew = arg.ew
         self.target = None
 
-    def _fit(self, X: np.ndarray, args):
+    def _fit(self, X: np.ndarray, val_X=None):
         pass
 
     def _forecast(self, X: np.ndarray, pred_len) -> np.ndarray:

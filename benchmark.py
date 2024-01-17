@@ -41,6 +41,8 @@ ALL_MODEL = (
     'FLinear',
     'FLinearGD',
     'SPIRIT',
+    'PatchTST',
+    'Transformer',
 )
 
 if __name__ == '__main__':
@@ -71,12 +73,12 @@ if __name__ == '__main__':
                 trainer = MLTrainer(model=model, transform=transform, dataset=dataset)
                 # train model
                 start = time.time()
-                trainer.train(args)
+                trainer.train()
                 # evaluate model
                 mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
                 end = time.time()
                 print(
-                    f"| {dataset.name:8} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} | {end - start: 6.3g} |")
+                    f"| {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} | {end - start: 6.3g} |")
                 results.append(
                     [dataset.name, model_name, pred_len, mse, mae, mape, smape, mase, end - start])
 
