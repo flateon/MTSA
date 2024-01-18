@@ -2,10 +2,15 @@ from multiprocessing import Pool
 from typing import Union
 
 import numpy as np
+import torch
 from scipy.ndimage import convolve1d
 from scipy.optimize import minimize
 from statsmodels.tsa.stl._stl import STL
 from tqdm import trange, tqdm
+
+
+def identity(x, *args, **kwargs):
+    return [x]
 
 
 def moving_average(x, period: Union[int, tuple] = 24, return_seasonal: bool = True):
@@ -30,8 +35,21 @@ def moving_average(x, period: Union[int, tuple] = 24, return_seasonal: bool = Tr
         weights[i: i + period[0]] += 1
     weights /= weights.sum()
 
-    trend = convolve1d(x, weights, axis=1, mode='nearest')
-
+    if isinstance(x, np.ndarray):
+        trend = convolve1d(x, weights, axis=1, mode='nearest')
+    elif isinstance(x, torch.Tensor):
+        n_channels = x.shape[-1]
+        # if len(weights) % 2 == 0:
+        #     # pad odd length weights to improve performance
+        #     weights = np.r_[weights, 0]
+        weights_1d = torch.tensor(weights, dtype=x.dtype, device=x.device)
+        weights = torch.zeros(n_channels, n_channels, len(weights), dtype=x.dtype, device=x.device)
+        weights[torch.diag(torch.ones(n_channels, dtype=torch.bool))] = weights_1d
+        x_pad = torch.nn.functional.pad(x.transpose(1, 2), (len(weights_1d) // 2 - 1, len(weights_1d) // 2),
+                                        mode='replicate')
+        trend = torch.nn.functional.conv1d(x_pad, weights, padding='valid').transpose(1, 2)
+    else:
+        return
     if not return_seasonal:
         return trend
     else:
@@ -121,10 +139,11 @@ def classic_decomposition(x, period=24):
     n_periods = timestamp // period
 
     trend, detrend = moving_average(x, period)
-    period_avg = detrend[:, :n_periods * period, :].reshape((n_samples, n_periods, period, n_channels)).mean(axis=1)
-
-    seasonal = np.tile(period_avg, (1, n_periods + 1, 1))[:, :timestamp, :]
-
+    period_avg = detrend[:, :n_periods * period, :].reshape((n_samples, n_periods, period, n_channels)).mean(1)
+    if isinstance(x, torch.Tensor):
+        seasonal = torch.tile(period_avg, (1, n_periods + 1, 1))[:, :timestamp, :]
+    else:
+        seasonal = np.tile(period_avg, (1, n_periods + 1, 1))[:, :timestamp, :]
     resid = detrend - seasonal
     return trend, seasonal, resid
 
@@ -240,5 +259,7 @@ def get_decomposition(algorithm):
         return STL_decomposition, 3
     elif algorithm == 'X11':
         return X11_decomposition, 3
+    elif algorithm == 'identity':
+        return identity, 1
     else:
         raise ValueError('Algorithm {} is not supported.'.format(algorithm))

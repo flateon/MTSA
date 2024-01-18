@@ -59,7 +59,7 @@ def get_args():
     parser.add_argument('--pca_components', type=str, default='0.99',
                         help='number of components for PCA, options: ["mle", int, float]')
     parser.add_argument('--individual', action='store_true', default=False)
-    parser.add_argument('--decomposition', type=str, default='classic',
+    parser.add_argument('--decomposition', type=str, default='moving_average',
                         help='decomposition method, options: [moving_average, differential, classic]')
 
     parser.add_argument('--embed', type=str, default='timeF',
@@ -84,12 +84,14 @@ def get_args():
 
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
-    parser.add_argument('--epochs', type=int, default=20, help='epochs')
+    parser.add_argument('--epochs', type=int, default=10, help='epochs')
     parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
     parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
 
     # gpu define
     parser.add_argument('--device', type=str, default='0', help='gpu id or cpu')
+    parser.add_argument('--amp', dest='use_amp', default=False, help='use amp', action='store_true')
+    parser.add_argument('--log', action='store_true', default=False, help='log')
 
     # transform define
     parser.add_argument('--transform', type=str, default='StandardizationTransform')
@@ -147,6 +149,6 @@ if __name__ == '__main__':
     # train model
     trainer.train()
     # evaluate model
-    mse, mae = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+    mse, mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
     print(f"MSE: {mse:.4f}")
     print(f"MAE: {mae:.4f}")

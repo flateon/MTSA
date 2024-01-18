@@ -1,3 +1,5 @@
+from copy import copy
+
 import numpy as np
 
 
@@ -145,3 +147,16 @@ class YeoJohnsonTransform(Transform):
 
 class BoxCoxTransform(YeoJohnsonTransform):
     pass
+
+
+class ListTransform(Transform):
+    def __init__(self, transforms, *args, **kwargs):
+        self.transforms = transforms
+
+    def transform(self, data: list[np.ndarray], *args, **kwargs):
+        if not isinstance(self.transforms, list):
+            self.transforms = [copy(self.transforms) for _ in range(len(data))]
+        return [transform.transform(d, *args, **kwargs) for transform, d in zip(self.transforms, data)]
+
+    def inverse_transform(self, data: list[np.ndarray], *args, **kwargs):
+        return [transform.inverse_transform(d, *args, **kwargs) for transform, d in zip(self.transforms, data)]

@@ -141,6 +141,31 @@ class CustomDataset(DatasetBase):
         self.test_data = self.data[:, self.num_train + self.num_val - seq_len:, :]
 
 
+class MultiDataset(DatasetBase):
+    def __init__(self, args):
+        self.type = 'MultiDataset'
+        self.name = ''
+        self.datasets = []
+        self.train_data = []
+        self.val_data = []
+        self.test_data = []
+        super().__init__(args)
+
+    def read_data(self):
+        pass
+
+    def split_data(self, seq_len):
+        pass
+
+    def merge_dataset(self, dataset_list: list[DatasetBase]):
+        self.datasets = dataset_list
+        for dataset in dataset_list:
+            self.train_data.append(dataset.train_data)
+            self.val_data.append(dataset.val_data)
+            self.test_data.append(dataset.test_data)
+            self.name += dataset.name
+
+
 def get_dataset(args) -> list[DatasetBase]:
     dataset_dict = {
         'M4':     M4Dataset,
