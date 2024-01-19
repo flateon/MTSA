@@ -25,7 +25,12 @@ class DLDataset(Dataset):
         self.mode = mode
         if self.mode == 'train':
             if isinstance(X, list):
-                self.data = X
+                chunk_size = min([x.shape[-1] for x in X])
+                self.data = []
+                for x in X:
+                    n_channels = x.shape[-1]
+                    self.data += [x[..., i:i + chunk_size] for i in range(0, n_channels, chunk_size) if
+                                  i + chunk_size <= n_channels]
             elif isinstance(X, np.ndarray) or isinstance(X, torch.Tensor):
                 self.data = [x for x in X]
             # self.data: tuple of 2d np.ndarray or torch.Tensor
