@@ -28,5 +28,5 @@ def mase(predict, target, m: int = 24):
 
 
 def metrics(pred, target, m: int = 24):
-    # return mse(pred, target), mae(pred, target), mape(pred, target), smape(pred, target), mase(pred, target, m=m)
-    return mse(pred, target), mae(pred, target), 0, 0, 0
+    return mse(pred, target), mae(pred, target), mape(pred, target), smape(pred, target), mase(pred, target, m=m)
+    # return mse(pred, target), mae(pred, target), 0, 0, 0

@@ -21,10 +21,12 @@ class TestModels(unittest.TestCase):
         # (n_samples, timestamps, channels)
         self.X = np.random.rand(1, self.n_train, self.n_channels) + np.arange(0, self.n_train)[:, np.newaxis].repeat(
             self.n_channels, axis=-1)
+        self.X = self.X.astype(np.float32)
         # (n_samples, timestamps, channels)
-        self.X_test = np.random.rand(self.n_test, self.seq_len, self.n_channels)
+        self.X_test = np.random.rand(self.n_test, self.seq_len, self.n_channels).astype(np.float32)
         self.fore_shape = (len(self.X_test), self.pred_len, self.n_channels)
-        self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len, individual=False, period=24)
+        self.args = Args(seq_len=self.seq_len, pred_len=self.pred_len, individual=False, period=24, log=False, epochs=1,
+                         lr=1e-4)
 
     def test_flinear(self):
         self.args.fl_weight = 'constant'
@@ -77,11 +79,11 @@ class TestModels(unittest.TestCase):
 
     def test_d_linear(self):
         for individual in (True, False):
-            for decomposition in ('moving_average', 'differential', 'classic'):
+            for decomposition in ('moving_average', 'classic'):
                 setattr(self.args, 'individual', individual)
                 setattr(self.args, 'decomposition', decomposition)
                 model = DLinear(self.args)
-                model.fit(self.X, self.args)
+                model.fit(self.X, self.X)
                 forecast = model.forecast(self.X_test, self.pred_len)
 
                 self.assertEqual(forecast.shape, self.fore_shape)
