@@ -14,7 +14,7 @@ from main import get_args
 
 ALL_DATASET = (
     # ('./dataset/traffic/traffic.csv', {'lamda': 3.5261, 'dataset': 'Custom'}),  # OOM
-    # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),  # OOM
+    # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686, 'dataset': 'Custom', 'period': 24}),  # OOM
     # ('./dataset/illness/national_illness.csv', {'lamda': 0.8973, 'dataset': 'Custom', 'seq_len': 36}),
     # ('./dataset/weather/weather.csv', {'lamda': 2.3604, 'dataset': 'Custom', 'period': 24}),
     # ('./dataset/exchange_rate/exchange_rate.csv', {'lamda': 2.8284, 'dataset': 'Custom', 'period': 24}),
@@ -32,7 +32,7 @@ PRED_LEN = (
 )
 
 ALL_MODEL = (
-    'DLinear',
+    # 'DLinear',
     # 'FLinearGD',
     'PatchTST',
     # 'Transformer',
@@ -40,7 +40,6 @@ ALL_MODEL = (
 
 if __name__ == '__main__':
     args = get_args()
-    print("| dataset  | model                | pred | mse    | mae    | mape   | smape  | mase  |")
     results = []
 
     all_dataset = []
@@ -72,21 +71,20 @@ if __name__ == '__main__':
             # train model
             trainer.train()
 
-            save_path = Path(f'checkpoints/{args.model}_Pretrain_{args.pred_len}')
+            save_path = Path(f'checkpoints/{args.model}_{args.pred_len}')
             save_path.mkdir(parents=True, exist_ok=True)
-            torch.save(model.state_dict(), save_path / 'checkpoint.pth')
+            torch.save(model.model.state_dict(), save_path / 'pretrain.pth')
 
             for dataset, transform in zip(all_dataset, list_transform.transforms):
                 trainer = MLTrainer(model=model, transform=transform, dataset=dataset)
-                mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+                mse, mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
                 print(
-                    f"| {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} |")
+                    f"| {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} |")
                 results.append(
-                    [multi_dataset.name, dataset.name, model_name, pred_len, mse, mae, mape, smape, mase])
+                    [multi_dataset.name, dataset.name, model_name, pred_len, mse, mae])
             # Create a Pandas DataFrame from the results list
             results_df = pd.DataFrame(results,
-                                      columns=["train_dataset", "test_dataset", "model", "pred_len", "mse", "mae",
-                                               "mape", "smape", "mase"])
+                                      columns=["train_dataset", "test_dataset", "model", "pred_len", "mse", "mae",])
 
             # Save the DataFrame to a CSV file
             results_df.to_csv("results/pretrain_model.csv", index=False)

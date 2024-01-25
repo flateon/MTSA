@@ -13,7 +13,7 @@ from main import get_args
 
 ALL_DATASET = (
     # ('./dataset/traffic/traffic.csv', {'lamda': 3.5261, 'dataset': 'Custom'}),  # OOM
-    # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),  # OOM
+    # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686, 'dataset': 'Custom', 'period': 24}),  # OOM
     # ('./dataset/illness/national_illness.csv', {'lamda': 0.8973, 'dataset': 'Custom', 'seq_len': 36}),
     ('./dataset/weather/weather.csv', {'lamda': 2.3604, 'dataset': 'Custom', 'period': 24}),
     ('./dataset/exchange_rate/exchange_rate.csv', {'lamda': 2.8284, 'dataset': 'Custom', 'period': 24}),
@@ -31,7 +31,7 @@ PRED_LEN = (
 )
 
 ALL_MODEL = (
-    'DLinear',
+    # 'DLinear',
     # 'FLinearGD',
     'PatchTST',
     # 'Transformer',
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                 np.random.seed(fix_seed)
                 # create model
                 model = get_model(args)
-                model.load(f'checkpoints/{args.model}_Pretrain_{args.pred_len}/checkpoint.pth')
+                model.load(f'checkpoints/{args.model}_{args.pred_len}/pretrain.pth')
                 # data transform
                 transform = get_transform(args)
                 # create trainer
@@ -68,21 +68,23 @@ if __name__ == '__main__':
                 start = time.time()
                 trainer.train()
 
-                save_path = Path(f'checkpoints/{args.model}_{dataset.name}_{args.pred_len}')
+                save_path = Path(f'checkpoints/{args.model}_{args.pred_len}')
                 save_path.mkdir(parents=True, exist_ok=True)
-                torch.save(model.model.state_dict(), save_path / 'checkpoint.pth')
+                torch.save(model.model.state_dict(), save_path / f'{dataset.name}_ft.pth')
 
                 # evaluate model
-                mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+                mse, mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len, mode='test')
+                val_mse, val_mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len,
+                                                             mode='val')
                 end = time.time()
                 print(
-                    f"| {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} | {end - start: 6.3g} |")
+                    f"| {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {end - start: 6.3g} |")
                 results.append(
-                    [dataset.name, model_name, pred_len, mse, mae, mape, smape, mase, end - start])
+                    [dataset.name, model_name, pred_len, mse, mae, val_mse, val_mae, end - start])
 
     # Create a Pandas DataFrame from the results list
     results_df = pd.DataFrame(results,
-                              columns=["dataset", "model", "pred_len", "mse", "mae", "mape", "smape", "mase", "time"])
+                              columns=["dataset", "model", "pred_len", "mse", "mae", "val_mse", "val_mse", "time"])
 
     # Save the DataFrame to a CSV file
     results_df.to_csv("results/finetune.csv", index=False)

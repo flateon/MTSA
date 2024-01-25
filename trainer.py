@@ -1,3 +1,4 @@
+from typing import Literal
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 from src.utils.metrics import metrics
@@ -16,13 +17,20 @@ class MLTrainer:
         val_X = self.transform.transform(val_X)
         self.model.fit(train_X, val_X)
 
-    def evaluate(self, dataset, seq_len=96, pred_len=96):
+    def evaluate(self, dataset, seq_len=96, pred_len=96, mode: Literal['train', 'val', 'test'] = 'test'):
         if dataset.type == 'm4':
             test_X = dataset.train_data
             test_Y = dataset.test_data
             pred_len = dataset.test_data.shape[-1]
         else:
-            test_data = dataset.test_data
+            if mode == 'test':
+                test_data = dataset.test_data
+            elif mode == 'val':
+                test_data = dataset.val_data
+            elif mode == 'train':
+                test_data = dataset.train_data
+            else:
+                raise ValueError('mode should be one of train, val, test')
             test_data = self.transform.transform(test_data)
             subseries = np.concatenate(([sliding_window_view(v, (seq_len + pred_len, v.shape[-1])) for v in test_data]))
             test_X = subseries[:, 0, :seq_len, :]

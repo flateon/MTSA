@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-results = pd.read_csv('results/test_model.csv')
+results = pd.read_csv('results/tst_ett_w_v2/all_results.csv')
 
 metrics = ['MSE', 'MAE']
-col_name = 'Datasets'
-results_col_name = 'train_dataset'
+col_name = 'Method'
+results_col_name = 'method'
 columns = results[results_col_name].unique()
 # columns = ['FLinear', 'TimesNet', 'Linear', 'DLinear', 'ARIMA']
 # results = results[results['model'].isin(['DLinearClosedForm'])]
@@ -52,5 +52,5 @@ for dataset in results['dataset'].unique():
             else:
                 avg_row.append(f'{value:.3f}')
     form.append(avg_row)
-pd.DataFrame(form[1:], columns=form[0]).to_csv('./results/test_form.csv', index=False)
+# pd.DataFrame(form[1:], columns=form[0]).to_csv('./results/test_form.csv', index=False)
 print(' \\\ \n'.join([' & '.join(f) for f in form]))

@@ -11,6 +11,10 @@ from trainer import MLTrainer
 import pandas as pd
 from main import get_args
 
+ARGS_CONFIG = {
+    'batch_size': 128,
+}
+
 ALL_DATASET = (
     # ('./dataset/traffic/traffic.csv', {'lamda': 3.5261, 'dataset': 'Custom'}),  # OOM
     # ('./dataset/electricity/electricity.csv', {'lamda': 0.4686}),  # OOM
@@ -31,7 +35,7 @@ PRED_LEN = (
 )
 
 ALL_MODEL = (
-    'DLinear',
+    # 'DLinear',
     # 'FLinearGD',
     'PatchTST',
     # 'Transformer',
@@ -39,7 +43,9 @@ ALL_MODEL = (
 
 if __name__ == '__main__':
     args = get_args()
-    print("| dataset  | model                | pred | mse    | mae    | mape   | smape  | mase   | time |")
+    for k, v in ARGS_CONFIG.items():
+        setattr(args, k, v)
+
     results = []
 
     for dataset_path, kwargs in ALL_DATASET:
@@ -64,12 +70,11 @@ if __name__ == '__main__':
                 transform = get_transform(args)
                 transform.transform(dataset.train_data)
 
-                pretrain = torch.load(f'checkpoints/{args.model}_Pretrain_{args.pred_len}/checkpoint.pth')
-                finetune = torch.load(f'checkpoints/{args.model}_{dataset.name}_{args.pred_len}/checkpoint.pth')
+                pretrain = torch.load(f'checkpoints/{args.model}_{args.pred_len}/pretrain.pth')
+                finetune = torch.load(f'checkpoints/{args.model}_{args.pred_len}/{dataset.name}_ft.pth')
                 assert set(pretrain.keys()) == set(finetune.keys())
 
                 for alpha in np.linspace(0, 1, 11):
-
                     weights = {key: (1 - alpha) * pretrain[key] + alpha * finetune[key] for key in pretrain.keys()}
                     model.model.load_state_dict(weights)
                     model.fitted = True
@@ -78,15 +83,18 @@ if __name__ == '__main__':
                     trainer = MLTrainer(model=model, transform=transform, dataset=dataset)
 
                     # evaluate model
-                    mse, mae, mape, smape, mase = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len)
+                    mse, mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len,
+                                                         mode='test')
+                    val_mse, val_mae, _, _, _ = trainer.evaluate(dataset, seq_len=args.seq_len, pred_len=args.pred_len,
+                                                                 mode='val')
                     print(
-                        f"| {alpha:.3f} | {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} | {mape:6.4g} | {smape:6.4g} | {mase:6.4g} |")
+                        f"| {alpha:.3f} | {dataset.name:15} | {model_name:20} | {pred_len:3} | {mse:6.4g} | {mae:6.4g} |")
                     results.append(
-                        [alpha, dataset.name, model_name, pred_len, mse, mae, mape, smape, mase])
+                        [alpha, dataset.name, model_name, pred_len, mse, mae, val_mse, val_mae])
 
     # Create a Pandas DataFrame from the results list
     results_df = pd.DataFrame(results,
-                              columns=["alpha", "dataset", "model", "pred_len", "mse", "mae", "mape", "smape", "mase"])
+                              columns=["alpha", "dataset", "model", "pred_len", "mse", "mae", "val_mse", "val_mae"])
 
     # Save the DataFrame to a CSV file
     results_df.to_csv("results/ensemble.csv", index=False)
